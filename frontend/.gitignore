@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Angular cache
+.angular/
+
+# Build output (goes to ../public/dist — covered by root .gitignore)
+dist/
+
+# IDE
+.vscode/
+.idea/

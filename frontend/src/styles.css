@@ -1,0 +1,607 @@
+/* ============================================================
+   styles.css — Single source of truth for all application styles
+   
+   Compiled by Angular build → public/dist/styles.css
+   Loaded on EVERY page (PHP and Angular alike) via header.php.
+   
+   Layers:
+   1. PrimeNG lara-light-blue theme  (imported via angular.json)
+   2. PrimeNG primeng.css            (imported via angular.json)
+   3. PrimeIcons                     (imported via angular.json)
+   4. This file: design tokens + app-wide component styles
+   ============================================================ */
+
+/* ── Design tokens ─────────────────────────────────────────── */
+:root {
+  /* Typography */
+  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+                 "Segoe UI", Roboto, sans-serif;
+  --font-mono:   "SF Mono", SFMono-Regular, ui-monospace, monospace;
+
+  /* Surfaces */
+  --surface-page:    #f1f5f9;
+  --surface-card:    #ffffff;
+  --surface-subtle:  #f8fafc;
+  --surface-border:  #e2e8f0;
+  --surface-border2: #cbd5e1;
+
+  /* Text */
+  --text-900: #0f172a;
+  --text-700: #334155;
+  --text-500: #64748b;
+  --text-300: #94a3b8;
+
+  /* Brand */
+  --primary:   #3b82f6;
+  --primary-d: #1d4ed8;
+  --success:   #22c55e;
+  --warning:   #f97316;
+  --danger:    #ef4444;
+
+  /* Category colours */
+  --cat-strength:   #f97316;
+  --cat-cardio:     #22c55e;
+  --cat-run:        #3b82f6;
+  --cat-stretching: #a855f7;
+  --cat-yoga:       #ec4899;
+  --cat-mobility:   #64748b;
+
+  /* Shape */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.05);
+
+  /* Safe areas */
+  --sb: env(safe-area-inset-bottom, 0px);
+  --st: env(safe-area-inset-top, 0px);
+
+  /* Legacy aliases (used by PHP pages and old Angular components) */
+  --bg:   #f1f5f9;
+  --bg2:  #ffffff;
+  --bg3:  #f8fafc;
+  --bd:   #e2e8f0;
+  --bd2:  #cbd5e1;
+  --bd3:  #94a3b8;
+  --tx:   #0f172a;
+  --t2:   #334155;
+  --t3:   #64748b;
+  --t4:   #94a3b8;
+  --c2:   #3b82f6;
+  --fn:   var(--font-family);
+  --mono: var(--font-mono);
+  --r:    var(--radius-lg);
+  --rs:   var(--radius-sm);
+}
+
+/* ── Base ──────────────────────────────────────────────────── */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--surface-page);
+  color: var(--text-900);
+  font-family: var(--font-family);
+  min-height: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+*, *::before, *::after { box-sizing: border-box; }
+a { color: var(--primary); text-decoration: none; }
+button, input, select, textarea { font-family: var(--font-family); }
+[x-cloak] { display: none !important; }
+
+/* ── PrimeNG font pull-through ─────────────────────────────── */
+.p-component, .p-button, .p-inputtext, .p-dropdown { font-family: var(--font-family) !important; }
+
+/* ── Consistent page header ────────────────────────────────── */
+/*
+   Used by BOTH PHP pages and Angular components.
+   PHP pages:  <div class="page-header"> ... </div>
+   Angular:    host element + <div class="page-header"> ... </div>
+*/
+.page-header {
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+.page-eyebrow {
+  font-size: .62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--text-300);
+  margin-bottom: .2rem;
+}
+.page-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-900);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* ── Content wrapper ───────────────────────────────────────── */
+.page-body { padding: 1.25rem 1.5rem 5rem; }
+
+/* ── Cards ─────────────────────────────────────────────────── */
+.tt-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* ── Plan / Journey list cards ─────────────────────────────── */
+.tt-plan-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.25rem;
+  margin-bottom: .65rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .15s, transform .1s;
+}
+.tt-plan-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+/* ── Day cards (tracker) ───────────────────────────────────── */
+.tt-day-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: .65rem;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow .15s;
+}
+.tt-day-card:hover { box-shadow: var(--shadow-md); }
+.tt-day-card.is-done    { border-left: 4px solid var(--success); }
+.tt-day-card.is-skipped { border-left: 4px solid var(--warning); opacity: .85; }
+.tt-day-card.is-rest    { opacity: .65; }
+
+.tt-day-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .9rem 1.1rem; min-height: 64px;
+  cursor: pointer; user-select: none;
+  transition: background .1s;
+}
+.tt-day-header:hover { background: #fafbfc; }
+.tt-day-body {
+  padding: .9rem 1.1rem 1.1rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+/* ── Exercise cards inside day body ────────────────────────── */
+.tt-ex-card {
+  background: var(--surface-subtle);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  padding: .9rem;
+  margin-bottom: .65rem;
+}
+.tt-ex-inputs {
+  display: flex; gap: .6rem; flex-wrap: wrap;
+  margin-top: .75rem; align-items: flex-end;
+}
+.tt-ex-inp { flex: 1; min-width: 72px; }
+.tt-ex-inp label {
+  font-size: .62rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text-500);
+  display: block; margin-bottom: .3rem;
+}
+.tt-ex-inp-note { flex: 2; min-width: 130px; }
+
+/* ── Section label ─────────────────────────────────────────── */
+.tt-section-lbl {
+  font-size: .67rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: var(--text-500); margin: 1rem 0 .6rem;
+}
+
+/* ── Instruction bullets ───────────────────────────────────── */
+.tt-bull {
+  display: flex; gap: .5rem; align-items: flex-start;
+  padding: .35rem .6rem; border-left: 3px solid var(--surface-border);
+  margin-bottom: .35rem;
+}
+.tt-bull-txt { font-size: .85rem; color: var(--text-700); line-height: 1.55; }
+
+/* ── Week strip ────────────────────────────────────────────── */
+.tt-week-strip {
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+  padding: .65rem 1.5rem;
+  display: flex; overflow-x: auto; gap: .35rem;
+  scrollbar-width: none; flex-wrap: nowrap;
+}
+.tt-week-strip::-webkit-scrollbar { display: none; }
+.tt-wk-btn {
+  flex-shrink: 0; min-width: 40px; height: 40px;
+  border: 2px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  font-size: .75rem; font-weight: 600; color: var(--text-300);
+  cursor: pointer; font-family: var(--font-family);
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; position: relative;
+  padding: 4px 0 8px; transition: all .15s;
+}
+.tt-wk-btn:hover  { border-color: var(--primary); color: var(--primary); }
+.tt-wk-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.tt-wk-pip {
+  position: absolute; bottom: 4px;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--success);
+}
+.tt-wk-btn.active .tt-wk-pip { background: rgba(255,255,255,.8); }
+
+/* ── Bottom nav ────────────────────────────────────────────── */
+.tt-bot-nav {
+  position: fixed; bottom: 0; right: 0;
+  background: rgba(255,255,255,.97);
+  border-top: 1px solid var(--surface-border);
+  backdrop-filter: blur(12px);
+  padding: .65rem 1.5rem calc(.65rem + var(--sb));
+  display: flex; gap: .6rem; align-items: center;
+  z-index: 100;
+}
+@media (min-width: 769px) { .tt-bot-nav { left: 240px; } }
+@media (max-width: 768px) { .tt-bot-nav { left: 0; } }
+
+/* ── Category chips ────────────────────────────────────────── */
+.cat-chip,
+.cat-badge {
+  display: inline-flex; align-items: center; gap: .2rem;
+  font-size: .68rem; font-weight: 600;
+  padding: .2rem .6rem; border-radius: 20px;
+}
+.cat-strength   { background: #fff7ed; color: var(--cat-strength);   border: 1px solid #fdba74; }
+.cat-cardio     { background: #f0fdf4; color: #16a34a;               border: 1px solid #86efac; }
+.cat-run        { background: #eff6ff; color: var(--cat-run);        border: 1px solid #93c5fd; }
+.cat-stretching { background: #faf5ff; color: var(--cat-stretching); border: 1px solid #d8b4fe; }
+.cat-yoga       { background: #fdf2f8; color: var(--cat-yoga);       border: 1px solid #f9a8d4; }
+.cat-mobility   { background: #f8fafc; color: var(--cat-mobility);   border: 1px solid #cbd5e1; }
+
+/* ── History table ─────────────────────────────────────────── */
+.tt-hist-tbl { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.tt-hist-tbl th {
+  text-align: left; padding: .4rem .6rem;
+  font-size: .65rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text-500);
+  border-bottom: 2px solid var(--surface-border); white-space: nowrap;
+}
+.tt-hist-tbl td { padding: .45rem .6rem; border-bottom: 1px solid var(--surface-border); vertical-align: middle; }
+.tt-hist-tbl tr:last-child td { border-bottom: none; }
+.tt-hist-val  { font-weight: 600; color: var(--text-900); }
+.tt-delta-up  { font-size: .68rem; background: #dcfce7; color: #16a34a; border-radius: 4px; padding: 1px 5px; margin-left: .25rem; }
+.tt-delta-dn  { font-size: .68rem; background: #fee2e2; color: #dc2626; border-radius: 4px; padding: 1px 5px; margin-left: .25rem; }
+
+/* ── Media cards ───────────────────────────────────────────── */
+.tt-media-card { background: var(--surface-subtle); border: 1px solid var(--surface-border); border-radius: var(--radius-md); padding: .8rem; margin-bottom: .5rem; }
+.tt-media-btn  {
+  display: flex; align-items: center; gap: .55rem;
+  text-decoration: none; background: var(--surface-card);
+  border: 1px solid var(--surface-border2);
+  border-radius: var(--radius-sm);
+  padding: .65rem .9rem; width: 100%; min-height: 48px;
+  color: var(--text-900); font-family: var(--font-family);
+  cursor: pointer; transition: border-color .15s, background .15s;
+}
+.tt-media-btn:hover { border-color: var(--primary); }
+.tt-media-btn.yt  { border-color: #fca5a5; }
+.tt-media-btn.yt:hover  { background: #fff5f5; border-color: #ef4444; }
+.tt-media-btn.nrc { border-color: #86efac; }
+.tt-media-btn.nrc:hover { background: #f0fdf4; border-color: var(--success); }
+
+/* ── Loading state ─────────────────────────────────────────── */
+.tt-loading {
+  display: flex; align-items: center; gap: .65rem;
+  padding: 1.5rem; color: var(--text-300);
+  font-size: .85rem; justify-content: center;
+}
+
+/* ── Form helpers (PHP pages + Angular) ────────────────────── */
+.field, .tt-field { display: flex; flex-direction: column; gap: .3rem; }
+.field label, .tt-field label {
+  font-size: .72rem; font-weight: 600; color: var(--text-700);
+}
+.field input, .field select, .field textarea {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border2);
+  border-radius: var(--radius-sm);
+  padding: .6rem .75rem; color: var(--text-900);
+  width: 100%; min-height: 42px; font-size: 15px;
+  font-family: var(--font-family);
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59,130,246,.15);
+}
+
+/* ── Buttons (PHP pages) ───────────────────────────────────── */
+.btn {
+  border: none; border-radius: var(--radius-sm);
+  font-family: var(--font-family);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: opacity .15s, box-shadow .15s;
+  text-decoration: none;
+}
+.btn:active { opacity: .85; }
+.btn-primary {
+  background: var(--primary); color: #fff;
+  font-weight: 600; font-size: .88rem;
+  padding: .65rem 1.25rem; min-height: 42px;
+}
+.btn-primary:hover { background: var(--primary-d); }
+.btn-ghost {
+  background: var(--surface-card); border: 1px solid var(--surface-border2);
+  color: var(--text-700); font-size: .78rem;
+  padding: .45rem .85rem; min-height: 38px;
+}
+.btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+.btn-danger {
+  background: none; border: 1px solid #fca5a5;
+  color: #ef4444; font-size: .75rem;
+  padding: .4rem .75rem; min-height: 36px;
+}
+
+/* ── Alert / error banner ──────────────────────────────────── */
+.dberr {
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: var(--radius-sm); padding: .85rem;
+  margin: .9rem 0; font-size: .82rem; color: #dc2626;
+}
+
+/* ── Legacy card (PHP pages) ───────────────────────────────── */
+.card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* ── plans.php specific ────────────────────────────────────── */
+.upload-zone {
+  background: var(--surface-card);
+  border: 2px dashed var(--surface-border2);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.upload-zone:hover, .upload-zone.drag {
+  border-color: var(--primary);
+  background: #eff6ff;
+}
+.upload-zone input[type="file"] { display: none; }
+.tpl-stat {
+  display: inline-flex; align-items: center;
+  font-size: .68rem; font-weight: 500;
+  padding: .2rem .65rem; border-radius: 20px;
+  background: var(--surface-subtle);
+  color: var(--text-500); border: 1px solid var(--surface-border);
+}
+
+/* ── Spinner ───────────────────────────────────────────────── */
+.spin {
+  width: 18px; height: 18px;
+  border: 2px solid var(--surface-border);
+  border-top-color: var(--primary);
+  border-radius: 50%; animation: tt-spin .7s linear infinite; display: inline-block;
+}
+@keyframes tt-spin { to { transform: rotate(360deg); } }
+
+/* ── PrimeNG overrides — tighten for mobile ────────────────── */
+.p-inputtext         { padding: .55rem .75rem !important; font-size: .9rem !important; }
+.p-inputnumber-input { padding: .55rem .75rem !important; font-size: .9rem !important; }
+.p-dropdown-label    { padding: .55rem .75rem !important; font-size: .9rem !important; }
+.p-button            { font-size: .88rem !important; }
+.p-button.p-button-sm { font-size: .8rem !important; padding: .42rem .8rem !important; }
+.p-dialog .p-dialog-header { padding: 1rem 1.25rem .75rem; }
+.p-dialog .p-dialog-content { padding: 0 1.25rem .75rem; }
+.p-tabview .p-tabview-nav li .p-tabview-nav-link { padding: .6rem 1rem; font-size: .82rem; }
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page-header { padding: 1rem 1rem; }
+  .page-body   { padding: 1rem 1rem 5rem; }
+  .tt-week-strip { padding: .6rem 1rem; }
+  .tt-day-header { padding: .75rem .9rem; }
+  .tt-day-body   { padding: .75rem .9rem .9rem; }
+}
+
+/* ============================================================
+   Application-wide component classes
+   (Previously scoped to individual components — now global for
+   consistency and to eliminate duplication)
+   ============================================================ */
+
+/* ── Page structure ────────────────────────────────────────── */
+/* .page-header, .page-eyebrow, .page-title defined above */
+.page-body    { padding: 1.25rem 1.5rem 5rem; }
+.page-content { padding: 1rem 1.5rem 5rem; }  /* builder variant */
+:host { display: block; }
+
+/* ── Week strip (tracker + builder) ───────────────────────── */
+/* Global aliases matching component class names */
+.week-strip {
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+  padding: .65rem 1.5rem;
+  display: flex; overflow-x: auto;
+  gap: .35rem; scrollbar-width: none;
+  position: sticky; top: 0; z-index: 50;
+}
+.week-strip::-webkit-scrollbar { display: none; }
+.wk-btn {
+  flex-shrink: 0; min-width: 40px; height: 40px;
+  border: 2px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  font-size: .75rem; font-weight: 600; color: var(--text-300);
+  cursor: pointer; font-family: var(--font-family);
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; position: relative;
+  padding: 4px 0 8px; transition: all .15s;
+}
+.wk-btn:hover  { border-color: var(--primary); color: var(--primary); }
+.wk-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.wk-pip {
+  position: absolute; bottom: 4px;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--success);
+}
+.wk-btn.active .wk-pip { background: rgba(255,255,255,.8); }
+
+/* ── Bottom nav (tracker + builder) ───────────────────────── */
+.bot-nav {
+  position: fixed; bottom: 0; right: 0;
+  background: rgba(255,255,255,.97);
+  border-top: 1px solid var(--surface-border);
+  backdrop-filter: blur(12px);
+  padding: .65rem 1.5rem calc(.65rem + var(--sb));
+  display: flex; gap: .6rem; align-items: center;
+  z-index: 100;
+}
+@media (min-width: 769px) { .bot-nav { left: 240px; } }
+@media (max-width: 768px) { .bot-nav { left: 0; } }
+
+/* ── Journey cards ─────────────────────────────────────────── */
+.journey-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.25rem;
+  margin-bottom: .65rem; cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .15s, transform .1s;
+}
+.journey-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.journey-name  { font-size: 1rem; font-weight: 700; color: var(--text-900); margin-bottom: .2rem; }
+.journey-meta  { font-size: .78rem; color: var(--text-500); margin-bottom: .65rem; line-height: 1.5; }
+.progress-label { font-size: .72rem; color: var(--text-300); margin-top: .35rem; display: flex; align-items: center; gap: .5rem; }
+.empty-state {
+  background: var(--surface-card); border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg); padding: 3rem 1.5rem; text-align: center;
+}
+
+/* ── User rows (admin) ─────────────────────────────────────── */
+.user-row {
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--surface-card); border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md); padding: .9rem 1.1rem; margin-bottom: .5rem;
+  box-shadow: var(--shadow-sm);
+}
+.user-avatar {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  background: var(--primary); color: #fff; font-weight: 700; font-size: .9rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.user-name  { font-size: .92rem; font-weight: 600; color: var(--text-900); }
+.user-email { font-size: .75rem; color: var(--text-500); margin-top: .1rem; }
+
+/* ── Exercise list (exercises page) ────────────────────────── */
+.ex-list-row {
+  display: flex; align-items: center; gap: .75rem;
+  background: var(--surface-card); border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md); padding: .85rem 1rem; margin-bottom: .5rem;
+  box-shadow: var(--shadow-sm); transition: box-shadow .15s;
+}
+.ex-list-row:hover { box-shadow: var(--shadow-md); }
+.ex-list-name { font-size: .92rem; font-weight: 600; color: var(--text-900); }
+.ex-list-unit { font-size: .72rem; color: var(--text-500); margin-top: .1rem; }
+
+/* ── Exercises toolbar ─────────────────────────────────────── */
+.toolbar {
+  padding: .85rem 1.5rem;
+  display: flex; gap: .65rem; flex-wrap: wrap; align-items: center;
+  background: var(--surface-card); border-bottom: 1px solid var(--surface-border);
+}
+.cat-btn {
+  border: 1.5px solid var(--surface-border); border-radius: 20px;
+  background: var(--surface-card); font-size: .75rem; font-weight: 500;
+  color: var(--text-500); padding: .3rem .75rem; cursor: pointer;
+  transition: all .15s; font-family: var(--font-family);
+}
+.cat-btn:hover  { border-color: var(--primary); color: var(--primary); }
+.cat-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* ── Builder day cards ─────────────────────────────────────── */
+.day-card {
+  background: var(--surface-card); border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg); margin-bottom: .6rem;
+  overflow: hidden; box-shadow: var(--shadow-sm);
+}
+.day-card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .85rem 1.1rem; cursor: pointer; user-select: none; min-height: 58px;
+  transition: background .1s;
+}
+.day-card-header:hover { background: #fafbfc; }
+.day-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.day-name { font-size: .85rem; font-weight: 700; color: var(--text-900); }
+.day-date { font-size: .68rem; color: var(--text-300); margin-top: .1rem; }
+.day-body { padding: .75rem 1.1rem 1.1rem; border-top: 1px solid var(--surface-border); }
+
+.type-toggle {
+  display: flex; align-items: center; gap: .75rem;
+  margin-bottom: .85rem; padding-bottom: .75rem;
+  border-bottom: 1px solid var(--surface-subtle);
+}
+.toggle-group { display: flex; gap: .25rem; background: var(--surface-subtle); border-radius: 8px; padding: 3px; }
+.toggle-btn {
+  border: none; border-radius: 6px; padding: .35rem .8rem;
+  font-size: .78rem; font-weight: 500; cursor: pointer;
+  font-family: var(--font-family); transition: all .15s;
+  background: transparent; color: var(--text-500);
+}
+.toggle-btn.active { background: var(--surface-card); color: var(--text-900); box-shadow: var(--shadow-sm); font-weight: 600; }
+
+.ex-row { background: var(--surface-subtle); border: 1px solid var(--surface-border); border-radius: var(--radius-md); padding: .8rem .9rem; margin-bottom: .5rem; }
+.ex-row-top { display: flex; align-items: center; gap: .6rem; margin-bottom: .6rem; }
+.ex-row-name { flex: 1; font-size: .88rem; font-weight: 600; color: var(--text-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ex-inputs { display: flex; gap: .5rem; flex-wrap: wrap; align-items: flex-end; }
+.ex-inp { flex: 1; min-width: 72px; }
+.ex-inp label { font-size: .62rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text-500); display: block; margin-bottom: .25rem; }
+.ex-inp input { width: 100%; background: var(--surface-card); border: 1px solid var(--surface-border2); border-radius: var(--radius-sm); padding: .5rem .6rem; font-size: .85rem; color: var(--text-900); font-family: var(--font-family); }
+.ex-inp input:focus { outline: none; border-color: var(--primary); }
+.ex-inp-note { flex: 2; min-width: 120px; }
+.add-ex-btn {
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+  border: 1.5px dashed var(--surface-border2); border-radius: var(--radius-md);
+  background: var(--surface-card); color: var(--text-500); font-size: .82rem;
+  padding: .6rem .9rem; cursor: pointer; width: 100%;
+  margin: .35rem 0; font-family: var(--font-family); transition: border-color .15s, color .15s;
+}
+.add-ex-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+/* ── Create form (builder new plan) ────────────────────────── */
+.create-form { max-width: 520px; margin: 1.5rem auto; padding: 0 1.5rem; }
+.form-field { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .85rem; }
+.form-field label { font-size: .75rem; font-weight: 600; color: var(--text-700); }
+.form-row { display: flex; gap: .65rem; }
+.form-row .form-field { flex: 1; min-width: 130px; }
+
+/* ── Copy week modal ───────────────────────────────────────── */
+.copy-modal { background: var(--surface-card); border-radius: var(--radius-lg); padding: 1.25rem; width: min(96vw, 400px); max-height: 70vh; display: flex; flex-direction: column; gap: .75rem; }
+.cm-opts { overflow-y: auto; max-height: 240px; display: flex; flex-wrap: wrap; gap: .35rem; }
+
+/* ── Empty state ───────────────────────────────────────────── */
+.empty { padding: 3rem 1.5rem; text-align: center; color: var(--text-300); font-size: .9rem; }
+
+/* ── Responsive adjustments ────────────────────────────────── */
+@media (max-width: 768px) {
+  .week-strip { padding: .6rem 1rem; top: 56px; }
+  .page-body, .page-content { padding: 1rem 1rem 5rem; }
+  .toolbar    { padding: .75rem 1rem; }
+  .create-form { padding: 0 1rem; }
+}
