@@ -7,7 +7,6 @@ if (!isset($basePath)) {
     $basePath   = ($_scriptDir === '' || $_scriptDir === '.') ? '/' : $_scriptDir . '/';
 }
 
-// Which nav item is active?
 $_currentPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
 ?>
 <!DOCTYPE html>
@@ -18,21 +17,13 @@ $_currentPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1e3a5f">
 <title><?= htmlspecialchars($pageTitle) ?> — Training Tracker</title>
-<!-- Shell layout (sidebar/topbar/main) -->
-<link rel="stylesheet" href="<?= htmlspecialchars($basePath) ?>public/css/app.css">
-<!-- All design tokens, PrimeNG, component styles — every page -->
 <link rel="stylesheet" href="<?= htmlspecialchars($basePath) ?>public/dist/styles.css">
-<?php endif; ?>
 </head>
 <body>
 
 <?php if ($_authUser): ?>
-<!-- ══════════════════════════════════════════════════════
-     SIDEBAR + MAIN SHELL
-     ══════════════════════════════════════════════════════ -->
 <div class="tt-shell">
 
-  <!-- ── Sidebar ── -->
   <aside class="tt-sidebar">
     <div class="tt-sidebar-brand">
       <span class="tt-sidebar-logo">🏃</span>
@@ -80,7 +71,6 @@ $_currentPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
     </div>
   </aside>
 
-  <!-- ── Mobile top bar ── -->
   <header class="tt-topbar">
     <button class="tt-menu-btn" onclick="document.querySelector('.tt-sidebar').classList.toggle('open')" aria-label="Menu">
       <span></span><span></span><span></span>
@@ -89,10 +79,8 @@ $_currentPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
     <a href="<?= htmlspecialchars($basePath) ?>logout.php" class="tt-topbar-logout" title="Sign out">→</a>
   </header>
 
-  <!-- Sidebar backdrop for mobile -->
   <div class="tt-sidebar-backdrop" onclick="document.querySelector('.tt-sidebar').classList.remove('open')"></div>
 
-  <!-- ── Main content area ── -->
   <main class="tt-main">
 <?php else: ?>
 <main class="tt-main tt-main-full">
