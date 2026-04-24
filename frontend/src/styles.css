@@ -47,6 +47,10 @@
   --text-500: #64748b;
   --text-300: #94a3b8;
 
+  /* Semantic aliases used in components */
+  --text-primary: #0f172a;
+  --text-muted:   #94a3b8;
+
   /* Brand */
   --primary:   #3b82f6;
   --primary-d: #1d4ed8;
@@ -303,7 +307,7 @@ button, input, select, textarea { font-family: var(--font-family); }
   border-radius: var(--radius-lg); padding: 3rem 1.5rem; text-align: center;
 }
 
-/* Tracker day cards */
+/* ── Tracker day cards ─────────────────────────────────────── */
 .tt-day-card {
   background: var(--surface-card); border: 1px solid var(--surface-border);
   border-radius: var(--radius-lg); margin-bottom: .65rem;
@@ -319,13 +323,27 @@ button, input, select, textarea { font-family: var(--font-family); }
   cursor: pointer; user-select: none; transition: background .1s;
 }
 .tt-day-header:hover { background: #fafbfc; }
-.tt-day-body { padding: .9rem 1.1rem 1.1rem; border-top: 1px solid var(--surface-border); }
+
+/* Day header typography */
+.tt-day-name { font-size: .88rem; font-weight: 800; line-height: 1.15; }
+.tt-day-date { font-size: .65rem; color: var(--text-300); margin-top: .15rem; }
+.tt-day-code {
+  font-size: .6rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--text-300); font-family: var(--font-mono);
+  margin-bottom: .2rem;
+}
+.tt-day-wt { font-size: .9rem; font-weight: 600; line-height: 1.2; }
+
+.tt-day-body { padding: .9rem 1.1rem 1.25rem; border-top: 1px solid var(--surface-border); }
 
 /* Exercise cards inside day body */
 .tt-ex-card {
   background: var(--surface-subtle); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md); padding: .9rem; margin-bottom: .65rem;
+  border-radius: var(--radius-md); padding: .9rem; margin-bottom: .85rem;
 }
+.tt-ex-card:last-child { margin-bottom: 0; }
+.tt-ex-name    { font-size: .88rem; font-weight: 600; color: var(--text-900); }
+.tt-ex-planned { font-size: .72rem; color: var(--text-500); margin-top: .2rem; }
 .tt-ex-inputs { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .75rem; align-items: flex-end; }
 .tt-ex-inp    { flex: 1; min-width: 72px; }
 .tt-ex-inp label {
@@ -336,8 +354,9 @@ button, input, select, textarea { font-family: var(--font-family); }
 
 .tt-section-lbl {
   font-size: .67rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .1em; color: var(--text-500); margin: 1rem 0 .6rem;
+  letter-spacing: .1em; color: var(--text-500); margin: 1.1rem 0 .75rem;
 }
+.tt-section-lbl:first-child { margin-top: .25rem; }
 
 .tt-bull { display: flex; gap: .5rem; align-items: flex-start; padding: .35rem .6rem; border-left: 3px solid var(--surface-border); margin-bottom: .35rem; }
 .tt-bull-txt { font-size: .85rem; color: var(--text-700); line-height: 1.55; }
@@ -458,6 +477,7 @@ button, input, select, textarea { font-family: var(--font-family); }
 .user-email { font-size: .75rem; color: var(--text-500); margin-top: .1rem; }
 
 /* Exercise catalog list */
+.ex-list { padding: 1rem 1.5rem 5rem; }
 .ex-list-row {
   display: flex; align-items: center; gap: .75rem;
   background: var(--surface-card); border: 1px solid var(--surface-border);
@@ -473,6 +493,7 @@ button, input, select, textarea { font-family: var(--font-family); }
   padding: .85rem 1.5rem; display: flex; gap: .65rem; flex-wrap: wrap; align-items: center;
   background: var(--surface-card); border-bottom: 1px solid var(--surface-border);
 }
+.cat-filter { display: flex; gap: .35rem; flex-wrap: wrap; }
 .cat-btn {
   border: 1.5px solid var(--surface-border); border-radius: 20px;
   background: var(--surface-card); font-size: .75rem; font-weight: 500;
@@ -532,6 +553,7 @@ button, input, select, textarea { font-family: var(--font-family); }
   .create-form { padding: 0 1rem; }
   .tt-day-header { padding: .75rem .9rem; }
   .tt-day-body   { padding: .75rem .9rem .9rem; }
+  .ex-list       { padding: 1rem 1rem 5rem; }
 }
 
 
