@@ -100,8 +100,16 @@ export class TrackerComponent implements OnInit {
   get weekDateRange(): string {
     const d = this.days.filter(x => !x.is_rest);
     if (!d.length) return '';
-    const fmt = (s: string) => new Date(s + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return `${fmt(d[0].scheduled_date)} – ${fmt(d[d.length - 1].scheduled_date)}`;
+    const parse = (s: string) => new Date(s + 'T00:00:00');
+    const first = parse(d[0].scheduled_date);
+    const last  = parse(d[d.length - 1].scheduled_date);
+    const sameYear = first.getFullYear() === last.getFullYear();
+    const fmtFirst = first.toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric',
+      ...(sameYear ? {} : { year: 'numeric' }),
+    });
+    const fmtLast = last.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return `${fmtFirst} – ${fmtLast}`;
   }
 
   constructor(private msg: MessageService) {}

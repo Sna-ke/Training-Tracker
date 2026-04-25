@@ -257,12 +257,11 @@ button, input, select, textarea { font-family: var(--font-family); }
   background: var(--surface-card);
   border-bottom: 1px solid var(--surface-border);
   padding: .65rem 1.5rem;
-  display: flex; overflow-x: auto; gap: .35rem;
-  scrollbar-width: none; position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; gap: .35rem;
+  position: sticky; top: 0; z-index: 50;
 }
-.week-strip::-webkit-scrollbar { display: none; }
 .wk-btn {
-  flex-shrink: 0; min-width: 40px; height: 40px;
+  min-width: 40px; height: 40px;
   border: 2px solid var(--surface-border);
   border-radius: var(--radius-sm);
   background: var(--surface-card);
@@ -566,7 +565,8 @@ button, input, select, textarea { font-family: var(--font-family); }
 .empty { padding: 3rem 1.5rem; text-align: center; color: var(--text-300); font-size: .9rem; }
 
 @media (max-width: 768px) {
-  .week-strip  { padding: .6rem 1rem; top: var(--topbar-h); }
+  .week-strip  { padding: .6rem 1rem; top: var(--topbar-h); flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .week-strip::-webkit-scrollbar { display: none; }
   .toolbar     { padding: .75rem 1rem; }
   .create-form { padding: 0 1rem; }
   .tt-day-header { padding: .75rem .9rem; }
