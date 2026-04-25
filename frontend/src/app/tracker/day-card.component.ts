@@ -225,9 +225,11 @@ interface LogForm {
 export class DayCardComponent implements OnInit {
   @Input() day!: DaySummary;
   @Input() planId!: number;
-  @Output() toast       = new EventEmitter<string>();
-  @Output() openHistory = new EventEmitter<{ id: number; name: string }>();
-  @Output() openMedia   = new EventEmitter<{ id: number; name: string }>();
+  @Output() toast        = new EventEmitter<string>();
+  @Output() openHistory  = new EventEmitter<{ id: number; name: string }>();
+  @Output() openMedia    = new EventEmitter<{ id: number; name: string }>();
+  /** Emitted whenever this day's pip state changes. */
+  @Output() stateChange  = new EventEmitter<{ dayOfWeek: number; state: 'logged' | 'done' | 'skipped' | 'pending' }>();
 
   open = false; loaded = false; saving = false;
   isDone = false; isSkipped = false; dayNotes = '';
@@ -243,7 +245,11 @@ export class DayCardComponent implements OnInit {
   }
 
   constructor(private api: ApiService) {}
-  ngOnInit(): void { this.isDone = !!this.day.completed; this.isSkipped = !!this.day.skipped; }
+
+  ngOnInit(): void {
+    this.isDone    = !!this.day.completed;
+    this.isSkipped = !!this.day.skipped;
+  }
 
   toggle(): void {
     if (!this.canInteract) return;
@@ -268,6 +274,11 @@ export class DayCardComponent implements OnInit {
           };
         }
         this.loaded = true;
+
+        // If log data already exists, emit logged state (unless already done)
+        if (!this.isDone && this.day.has_log) {
+          this.stateChange.emit({ dayOfWeek: this.day.day_of_week, state: 'logged' });
+        }
       },
       error: () => this.toast.emit('Error loading workout'),
     });
@@ -299,7 +310,11 @@ export class DayCardComponent implements OnInit {
     if (!p.length) { this.toast.emit('Nothing to log'); return; }
     this.saving = true;
     forkJoin(p.map(x => this.api.log(x))).subscribe({
-      next: () => { this.saving = false; this.toast.emit('Log saved ✓'); },
+      next: () => {
+        this.saving = false;
+        this.toast.emit('Log saved ✓');
+        this.stateChange.emit({ dayOfWeek: this.day.day_of_week, state: 'logged' });
+      },
       error: () => { this.saving = false; this.toast.emit('Save failed ✗'); },
     });
   }
@@ -309,7 +324,12 @@ export class DayCardComponent implements OnInit {
     const p = this.buildPayloads();
     (p.length ? forkJoin(p.map(x => this.api.log(x))) : of([])).subscribe({
       next: () => this.api.complete(this.day.id, true, this.dayNotes).subscribe({
-        next: () => { this.isDone = true; this.saving = false; this.toast.emit('Day complete ✓'); },
+        next: () => {
+          this.isDone = true;
+          this.saving = false;
+          this.toast.emit('Day complete ✓');
+          this.stateChange.emit({ dayOfWeek: this.day.day_of_week, state: 'done' });
+        },
         error: () => { this.saving = false; this.toast.emit('Error'); },
       }),
       error: () => { this.saving = false; this.toast.emit('Save failed ✗'); },
@@ -318,21 +338,36 @@ export class DayCardComponent implements OnInit {
 
   undoDone(): void {
     this.api.complete(this.day.id, false).subscribe({
-      next: () => { this.isDone = false; this.toast.emit('Marked incomplete'); },
+      next: () => {
+        this.isDone = false;
+        this.toast.emit('Marked incomplete');
+        this.stateChange.emit({
+          dayOfWeek: this.day.day_of_week,
+          state: this.day.has_log ? 'logged' : 'pending',
+        });
+      },
     });
   }
 
   skip(): void {
     if (!confirm('Skip this day? Following workout days shift forward by 1 day.')) return;
     this.api.skip(this.day.id).subscribe({
-      next: () => { this.toast.emit('Day skipped ✓'); setTimeout(() => location.reload(), 700); },
+      next: () => {
+        this.toast.emit('Day skipped ✓');
+        this.stateChange.emit({ dayOfWeek: this.day.day_of_week, state: 'skipped' });
+        setTimeout(() => location.reload(), 700);
+      },
     });
   }
 
   unskip(): void {
     if (!confirm('Restore this day? Following workout days shift back by 1 day.')) return;
     this.api.unskip(this.day.id).subscribe({
-      next: () => { this.toast.emit('Day restored ✓'); setTimeout(() => location.reload(), 700); },
+      next: () => {
+        this.toast.emit('Day restored ✓');
+        this.stateChange.emit({ dayOfWeek: this.day.day_of_week, state: 'pending' });
+        setTimeout(() => location.reload(), 700);
+      },
     });
   }
 

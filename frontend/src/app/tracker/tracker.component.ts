@@ -23,7 +23,12 @@ declare const window: Window & typeof globalThis & { TRACKER_BOOT: TrackerBoot }
       @for (w of weekNumbers; track w) {
         <button class="wk-btn" [class.active]="w === boot.selectedWeek" (click)="go(w)">
           {{ w }}
-          @if (w < boot.selectedWeek) { <span class="wk-pip"></span> }
+          <!-- Per-day pip dots -->
+          <span class="wk-pips">
+            @for (pip of getPips(w); track $index) {
+              <span class="wk-pip" [class]="'wk-pip--' + pip"></span>
+            }
+          </span>
         </button>
       }
     </div>
@@ -52,6 +57,7 @@ declare const window: Window & typeof globalThis & { TRACKER_BOOT: TrackerBoot }
           [day]="day"
           [planId]="boot.planId"
           (toast)="showToast($event)"
+          (stateChange)="onDayStateChange($event)"
           (openHistory)="openModal($event.id, $event.name, 'history')"
           (openMedia)="openModal($event.id, $event.name, 'media')"
         />
@@ -87,6 +93,10 @@ export class TrackerComponent implements OnInit {
   weekDone = 0; weekTotal = 0; weekPct = 0;
   modal = { open: false, exerciseId: null as number | null, exerciseName: '', tab: 'history' as 'history' | 'media' };
 
+  // Mutable pip state for the selected week — updated reactively as user interacts
+  // Shape: dayOfWeek (0-6) => pip state string
+  private currentWeekPips: Record<number, string> = {};
+
   get weekDateRange(): string {
     const d = this.days.filter(x => !x.is_rest);
     if (!d.length) return '';
@@ -104,6 +114,36 @@ export class TrackerComponent implements OnInit {
     this.weekTotal = active.length;
     this.weekDone  = active.filter(d => d.completed).length;
     this.weekPct   = this.weekTotal > 0 ? Math.round(this.weekDone / this.weekTotal * 100) : 0;
+
+    // Seed current week's mutable pips from boot data
+    this.currentWeekPips = { ...(this.boot.weekPips[this.boot.selectedWeek] ?? {}) };
+  }
+
+  /**
+   * Returns the ordered array of pip states for a given week button.
+   * For the selected week, uses mutable currentWeekPips so changes are
+   * reflected immediately without a page reload. Other weeks use boot data.
+   */
+  getPips(week: number): string[] {
+    const pipMap = week === this.boot.selectedWeek
+      ? this.currentWeekPips
+      : (this.boot.weekPips[week] ?? {});
+
+    // Always render exactly 7 dots (day_of_week 0–6)
+    return Array.from({ length: 7 }, (_, i) => pipMap[i] ?? 'pending');
+  }
+
+  /**
+   * Called by day cards when their state changes (logged, done, skipped, restored).
+   * Updates the pip for that day in the current week immediately.
+   */
+  onDayStateChange(event: { dayOfWeek: number; state: 'logged' | 'done' | 'skipped' | 'pending' }): void {
+    this.currentWeekPips = { ...this.currentWeekPips, [event.dayOfWeek]: event.state };
+
+    // Recalculate weekDone/weekPct if done state changed
+    const active = this.days.filter(d => !d.is_rest);
+    this.weekDone = Object.values(this.currentWeekPips).filter(s => s === 'done').length;
+    this.weekPct  = active.length > 0 ? Math.round(this.weekDone / active.length * 100) : 0;
   }
 
   go(w: number): void {

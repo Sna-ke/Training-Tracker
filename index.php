@@ -3,14 +3,12 @@
 //  index.php — Journey tracker
 //
 //  Controller: load data from repositories, prepare $bootData.
-//  View: public/js/pages/tracker/ React components
-//  ViewModel: TrackerApp.js + DayCard.js (state + event handling)
+//  View: Angular tracker component
 // ============================================================
 declare(strict_types=1);
 require_once __DIR__ . '/app/autoload.php';
 use App\Auth;
 $currentUser = Auth::require();
-
 
 use App\Database;
 use App\Models\{Exercise, PlanDay};
@@ -38,7 +36,6 @@ $completionMap = $dayRepo->completionGrid($planId);
 $weekDays      = $dayRepo->findByWeek($planId, $selectedWeek);
 
 // ── 3. Compute all view-data in the controller ─────────────────
-// Phase definitions — could be stored per-plan, hard-coded here for this plan type
 $phases = [
     ['f'=>1,  't'=>8,  'name'=>'Sharpening Base',    'col'=>'#38bdf8', 'sh'=>'Base'],
     ['f'=>9,  't'=>22, 'name'=>'Lactate Development', 'col'=>'#4ade80', 'sh'=>'Lactate'],
@@ -54,7 +51,6 @@ $specialWeeks = [
     49=>['label'=>'🏆 Race Day',     'color'=>'#fbbf24'],
 ];
 
-// Helper: return phase data for a week number
 $phaseFor = function(int $w) use ($phases): array {
     foreach ($phases as $p) {
         if ($w >= $p['f'] && $w <= $p['t']) return $p;
@@ -62,7 +58,6 @@ $phaseFor = function(int $w) use ($phases): array {
     return end($phases);
 };
 
-// Helper: phase color for the week-grid button
 $weekColor = function(int $w) use ($phases): string {
     foreach ($phases as $p) {
         if ($w >= $p['f'] && $w <= $p['t']) return $p['col'];
@@ -70,16 +65,52 @@ $weekColor = function(int $w) use ($phases): string {
     return end($phases)['col'];
 };
 
-// Helper: completion pip HTML for one week
-$weekPips = function(int $wk) use ($completionMap): string {
-    $html = '';
-    for ($d = 0; $d <= 5; $d++) {
-        $inf  = $completionMap[$wk][$d] ?? null;
-        $cls  = $inf ? ($inf['done'] ? ' done' : ($inf['skipped'] ? ' skip' : '')) : '';
-        $html .= "<span class=\"pip{$cls}\"></span>";
+// ── 4. Build weekPips — per-week, per-day pip state ───────────
+// Also fetch which plan days in the selected week have any log entries
+// so we can surface the 'logged' (in-progress) state on load.
+
+// Fetch plan day IDs for the selected week alongside their day_of_week
+$selectedWeekDayIds = [];
+foreach ($weekDays as $d) {
+    if (!$d->isRest) {
+        $selectedWeekDayIds[$d->dayOfWeek] = $d->id;
     }
-    return $html;
-};
+}
+
+// Single query: which plan_day_ids in the selected week have at least one log row?
+$loggedDayIds = [];
+if ($selectedWeekDayIds) {
+    $ids      = implode(',', array_map('intval', array_values($selectedWeekDayIds)));
+    $logRows  = $db->fetchAll(
+        "SELECT DISTINCT plan_day_id FROM exercise_logs WHERE plan_day_id IN ($ids)"
+    );
+    foreach ($logRows as $row) {
+        $loggedDayIds[(int)$row['plan_day_id']] = true;
+    }
+}
+
+// Build weekPips: [weekNum][dayOfWeek] => 'done'|'skipped'|'logged'|'rest'|'pending'
+// For all weeks: done/skipped come from completionMap (already loaded).
+// For the selected week only: 'logged' is added from the log query above.
+$weekPips = [];
+for ($w = 1; $w <= $plan->totalWeeks; $w++) {
+    $weekPips[$w] = [];
+    for ($d = 0; $d <= 6; $d++) {
+        $inf = $completionMap[$w][$d] ?? null;
+        if ($inf === null) {
+            // day_of_week not present = rest day for this week
+            $weekPips[$w][$d] = 'rest';
+        } elseif ($inf['done']) {
+            $weekPips[$w][$d] = 'done';
+        } elseif ($inf['skipped']) {
+            $weekPips[$w][$d] = 'skipped';
+        } elseif ($w === $selectedWeek && isset($selectedWeekDayIds[$d]) && isset($loggedDayIds[$selectedWeekDayIds[$d]])) {
+            $weekPips[$w][$d] = 'logged';
+        } else {
+            $weekPips[$w][$d] = 'pending';
+        }
+    }
+}
 
 $currentPhase  = $phaseFor($selectedWeek);
 $weekDone      = (int)(($weekGrid[$selectedWeek] ?? [])['done']  ?? 0);
@@ -89,9 +120,7 @@ $weekSpecial   = $specialWeeks[$selectedWeek] ?? null;
 $firstDate     = $weekDays ? $weekDays[0]->scheduledDate->format('M j') : '';
 $lastDate      = $weekDays ? end($weekDays)->scheduledDate->format('M j, Y') : '';
 
-// ── 4. Serialise days for React boot data ────────────────────────
-// Each day carries enough data for the DayCard component to render
-// and interact without additional PHP.
+// ── 5. Serialise days for Angular boot data ───────────────────
 $bootDays = array_map(fn(PlanDay $d) => [
     'id'              => $d->id,
     'day_of_week'     => $d->dayOfWeek,
@@ -99,6 +128,7 @@ $bootDays = array_map(fn(PlanDay $d) => [
     'is_rest'         => $d->isRest,
     'skipped'         => $d->skipped,
     'completed'       => $d->completed,
+    'has_log'         => isset($loggedDayIds[$d->id]),
     'scheduled_date'  => $d->scheduledDate->format('Y-m-d'),
     'workout_type_id' => $d->workoutTypeId,
     'wt_name'         => $d->workoutTypeName,
@@ -115,9 +145,10 @@ $bootData = [
     'phase'        => $currentPhase,
     'catColors'    => array_map(fn($c) => $c['color'], Exercise::CATEGORIES),
     'days'         => $bootDays,
+    'weekPips'     => $weekPips,
 ];
 
-// ── 5. Layout variables ────────────────────────────────────────
+// ── 6. Layout variables ───────────────────────────────────────
 $pageTitle      = $plan->name;
 $inlineScript   = 'window.APP_PAGE="tracker";window.TRACKER_BOOT = ' . json_encode($bootData) . ';';
 require __DIR__ . '/layout/header.php';

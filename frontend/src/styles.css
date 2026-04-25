@@ -274,11 +274,25 @@ button, input, select, textarea { font-family: var(--font-family); }
 }
 .wk-btn:hover  { border-color: var(--primary); color: var(--primary); }
 .wk-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
-.wk-pip {
-  position: absolute; bottom: 4px;
-  width: 5px; height: 5px; border-radius: 50%; background: var(--success);
+.wk-pips {
+  position: absolute; bottom: 3px;
+  display: flex; gap: 2px; align-items: center;
 }
-.wk-btn.active .wk-pip { background: rgba(255,255,255,.8); }
+.wk-pip {
+  width: 3px; height: 3px; border-radius: 50%;
+  background: var(--surface-border2); flex-shrink: 0; transition: background .2s;
+}
+/* Pip state colours */
+.wk-pip--done    { background: var(--success); }
+.wk-pip--logged  { background: var(--primary); }
+.wk-pip--skipped { background: var(--warning); }
+.wk-pip--rest    { background: var(--surface-border); }
+.wk-pip--pending { background: var(--surface-border2); }
+/* Active week button — lighten all pips for contrast */
+.wk-btn.active .wk-pip { opacity: .75; }
+.wk-btn.active .wk-pip--done    { background: #3fc424;  opacity: 1; }
+.wk-btn.active .wk-pip--logged  { background: #8db5bf; opacity: 1; }
+.wk-btn.active .wk-pip--skipped { background: #f86a4d; opacity: 1; }
 
 /* Bottom nav */
 .bot-nav {
@@ -345,7 +359,7 @@ button, input, select, textarea { font-family: var(--font-family); }
 .tt-ex-name    { font-size: .88rem; font-weight: 600; color: var(--text-900); }
 .tt-ex-planned { font-size: .72rem; color: var(--text-500); margin-top: .2rem; }
 .tt-ex-inputs { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .75rem; align-items: flex-end; }
-.tt-ex-inp    { flex: 1 1 80px; min-width: 0; width: 0; }
+.tt-ex-inp    { flex: 1; min-width: 72px; }
 .tt-ex-inp label {
   font-size: .62rem; font-weight: 600; text-transform: uppercase;
   letter-spacing: .07em; color: var(--text-500); display: block; margin-bottom: .3rem;

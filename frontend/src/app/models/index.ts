@@ -13,6 +13,8 @@ export interface TrackerBoot {
   phase:        Phase;
   catColors:    Record<string, string>;
   days:         DaySummary[];
+  /** Per-week, per-day pip state. weekPips[weekNum][dayOfWeek] = 'done'|'skipped'|'logged'|'rest'|'pending' */
+  weekPips:     Record<number, Record<number, string>>;
 }
 
 export interface BuilderBoot {
@@ -70,6 +72,7 @@ export interface DaySummary {
   is_rest:         boolean;
   skipped:         boolean;
   completed:       boolean;
+  has_log:         boolean;
   scheduled_date:  string;
   workout_type_id: number | null;
   wt_name:         string | null;
