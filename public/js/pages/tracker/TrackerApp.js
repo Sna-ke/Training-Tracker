@@ -7,7 +7,7 @@ import { ExerciseModal }           from '../../shared/ExerciseModal.js';
 import { DayCard }                 from './DayCard.js';
 
 export function TrackerApp({ boot }) {
-  const { planId, selectedWeek, currentWeek, totalWeeks, phase, days } = boot;
+  const { planId, , currentWeek, totalWeeks, phase, days } = boot;
 
   const [toast, setToast] = useState(null);
   const showToast = useCallback((msg) => {

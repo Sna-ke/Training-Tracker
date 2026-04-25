@@ -345,12 +345,16 @@ button, input, select, textarea { font-family: var(--font-family); }
 .tt-ex-name    { font-size: .88rem; font-weight: 600; color: var(--text-900); }
 .tt-ex-planned { font-size: .72rem; color: var(--text-500); margin-top: .2rem; }
 .tt-ex-inputs { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .75rem; align-items: flex-end; }
-.tt-ex-inp    { flex: 1; min-width: 72px; }
+.tt-ex-inp    { flex: 1 1 80px; min-width: 0; width: 0; }
 .tt-ex-inp label {
   font-size: .62rem; font-weight: 600; text-transform: uppercase;
   letter-spacing: .07em; color: var(--text-500); display: block; margin-bottom: .3rem;
 }
-.tt-ex-inp-note { flex: 2; min-width: 130px; }
+.tt-ex-inp-note { flex: 2 1 130px; min-width: 0; }
+
+/* Force PrimeNG inputNumber wrapper and its inner input to fill the flex cell */
+.tt-ex-inp .p-inputnumber,
+.tt-ex-inp .p-inputnumber-input { width: 100% !important; min-width: 0 !important; }
 
 .tt-section-lbl {
   font-size: .67rem; font-weight: 700; text-transform: uppercase;
