@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -95,14 +95,23 @@ declare const window: Window & typeof globalThis & { BUILDER_BOOT: BuilderBoot }
     <!-- ── Week editor ── -->
     @if (boot.planId) {
 
-      <!-- Week strip -->
-      <div class="week-strip">
+      <!-- Week strip.
+           Mobile: always horizontal scroll (flex-wrap:nowrap set in CSS).
+           Desktop: wraps, but collapsed to one row until expanded. -->
+      <div #weekStrip class="week-strip" [class.collapsed]="!weekStripExpanded">
         @for (w of weekNumbers; track w) {
           <button class="wk-btn" [class.active]="curWeek === w" (click)="loadWeek(w)">
             {{ w }}
-            @if (hasContent[w]) { <span class="wk-pip"></span> }
+            @if (hasContent[w]) { <span class="wk-pip wk-pip--done"></span> }
           </button>
         }
+        <!-- Expand/collapse chevron — only visible on desktop via CSS -->
+        <button class="wk-expand-btn"
+                (click)="weekStripExpanded = !weekStripExpanded"
+                [title]="weekStripExpanded ? 'Collapse weeks' : 'Expand all weeks'">
+          <i class="pi" [class.pi-chevron-down]="!weekStripExpanded"
+                        [class.pi-chevron-up]="weekStripExpanded"></i>
+        </button>
       </div>
 
       <div class="page-content">
@@ -276,7 +285,9 @@ declare const window: Window & typeof globalThis & { BUILDER_BOOT: BuilderBoot }
     }
   `,
 })
-export class BuilderComponent implements OnInit {
+export class BuilderComponent implements OnInit, AfterViewInit {
+  @ViewChild('weekStrip') weekStripEl!: ElementRef<HTMLElement>;
+
   boot!: BuilderBoot;
   weekNumbers: number[] = [];
   curWeek = 1;
@@ -291,6 +302,7 @@ export class BuilderComponent implements OnInit {
   pickerTarget = 0;
   copyModalOpen = false;
   copyTargets:  Record<number, boolean> = {};
+  weekStripExpanded = false;
   busy      = false;
   formError = '';
   errors:   Record<string, string> = {};
@@ -326,9 +338,33 @@ export class BuilderComponent implements OnInit {
       });
   }
 
+  ngAfterViewInit(): void {
+    setTimeout(() => this.scrollActiveRowIntoView(), 0);
+  }
+
+  /** Scrolls the active week button into view:
+   *  - Mobile: horizontal scroll, centres the active button.
+   *  - Desktop collapsed: vertical scroll so the active row is visible. */
+  private scrollActiveRowIntoView(): void {
+    const strip = this.weekStripEl?.nativeElement;
+    if (!strip) return;
+    const active = strip.querySelector('.wk-btn.active') as HTMLElement | null;
+    if (!active) return;
+
+    if (window.innerWidth < 769) {
+      // Mobile — centre the active button horizontally
+      const centreLeft = active.offsetLeft - (strip.clientWidth / 2) + (active.offsetWidth / 2);
+      strip.scrollTo({ left: centreLeft, behavior: 'smooth' });
+    } else {
+      // Desktop collapsed — scroll vertically to show active row
+      strip.scrollTop = active.offsetTop - strip.offsetTop;
+    }
+  }
+
   loadWeek(w: number): void {
     if (w < 1 || w > this.boot.totalWeeks) return;
     this.curWeek = w;
+    setTimeout(() => this.scrollActiveRowIntoView(), 0);
     if (this.weekCache[w]) { this.applyWeek(this.weekCache[w]); return; }
     this.weekLoading = true;
     this.api.builderWeekDays(this.boot.planId, w).subscribe({
@@ -352,6 +388,9 @@ export class BuilderComponent implements OnInit {
           planned_duration_min: e.planned_duration_min!= null ? String(e.planned_duration_min): '',
           item_note:            e.item_note ?? '',
         }));
+      }
+      if (!this.hasContent[this.curWeek]) {
+        this.hasContent[this.curWeek] = days.some(d => !d.is_rest && (d.exercises ?? []).length > 0);
       }
     }
   }

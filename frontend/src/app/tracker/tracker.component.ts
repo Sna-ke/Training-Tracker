@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -18,8 +18,10 @@ declare const window: Window & typeof globalThis & { TRACKER_BOOT: TrackerBoot }
   template: `
     <p-toast position="bottom-center" />
 
-    <!-- Week strip — full width, sticky -->
-    <div class="week-strip">
+    <!-- Week strip — full width, sticky.
+         Mobile: always horizontal scroll (flex-wrap:nowrap set in CSS).
+         Desktop: wraps, but collapsed to one row until expanded. -->
+    <div #weekStrip class="week-strip" [class.collapsed]="!weekStripExpanded">
       @for (w of weekNumbers; track w) {
         <button class="wk-btn" [class.active]="w === boot.selectedWeek" (click)="go(w)">
           {{ w }}
@@ -31,6 +33,13 @@ declare const window: Window & typeof globalThis & { TRACKER_BOOT: TrackerBoot }
           </span>
         </button>
       }
+      <!-- Expand/collapse chevron — only visible on desktop via CSS -->
+      <button class="wk-expand-btn"
+              (click)="weekStripExpanded = !weekStripExpanded"
+              [title]="weekStripExpanded ? 'Collapse weeks' : 'Expand all weeks'">
+        <i class="pi" [class.pi-chevron-down]="!weekStripExpanded"
+                      [class.pi-chevron-up]="weekStripExpanded"></i>
+      </button>
     </div>
 
     <!-- Page header -->
@@ -86,15 +95,17 @@ declare const window: Window & typeof globalThis & { TRACKER_BOOT: TrackerBoot }
       [planId]="boot.planId" (close)="closeModal()" />
   `,
 })
-export class TrackerComponent implements OnInit {
+export class TrackerComponent implements OnInit, AfterViewInit {
+  @ViewChild('weekStrip') weekStripEl!: ElementRef<HTMLElement>;
+
   boot!: TrackerBoot;
   days: DaySummary[] = [];
   weekNumbers: number[] = [];
   weekDone = 0; weekTotal = 0; weekPct = 0;
+  weekStripExpanded = false;
   modal = { open: false, exerciseId: null as number | null, exerciseName: '', tab: 'history' as 'history' | 'media' };
 
   // Mutable pip state for the selected week — updated reactively as user interacts
-  // Shape: dayOfWeek (0-6) => pip state string
   private currentWeekPips: Record<number, string> = {};
 
   get weekDateRange(): string {
@@ -152,6 +163,30 @@ export class TrackerComponent implements OnInit {
     const active = this.days.filter(d => !d.is_rest);
     this.weekDone = Object.values(this.currentWeekPips).filter(s => s === 'done').length;
     this.weekPct  = active.length > 0 ? Math.round(this.weekDone / active.length * 100) : 0;
+  }
+
+  ngAfterViewInit(): void {
+    // Scroll collapsed strip so active week's row is visible
+    setTimeout(() => this.scrollActiveRowIntoView(), 0);
+  }
+
+  /** Scrolls the active week button into view:
+   *  - Mobile: horizontal scroll, centres the active button.
+   *  - Desktop collapsed: vertical scroll so the active row is visible. */
+  private scrollActiveRowIntoView(): void {
+    const strip = this.weekStripEl?.nativeElement;
+    if (!strip) return;
+    const active = strip.querySelector('.wk-btn.active') as HTMLElement | null;
+    if (!active) return;
+
+    if (window.innerWidth < 769) {
+      // Mobile — centre the active button horizontally
+      const centreLeft = active.offsetLeft - (strip.clientWidth / 2) + (active.offsetWidth / 2);
+      strip.scrollTo({ left: centreLeft, behavior: 'smooth' });
+    } else {
+      // Desktop collapsed — scroll vertically to show active row
+      strip.scrollTop = active.offsetTop - strip.offsetTop;
+    }
   }
 
   go(w: number): void {

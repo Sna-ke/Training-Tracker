@@ -252,15 +252,63 @@ button, input, select, textarea { font-family: var(--font-family); }
   overflow: hidden;
 }
 
-/* Week strip */
+/* ── Week strip ─────────────────────────────────────────────
+   Mobile (default): always horizontal scroll, never wraps.
+   Desktop (≥769px): wraps naturally, but collapsed to one row
+   by default with a chevron button to expand all weeks.
+   ────────────────────────────────────────────────────────── */
 .week-strip {
   background: var(--surface-card);
   border-bottom: 1px solid var(--surface-border);
   padding: .65rem 1.5rem;
-  display: flex; flex-wrap: wrap; gap: .35rem;
+  display: flex;
+  flex-wrap: nowrap;          /* prevent wrapping on mobile */
+  gap: .35rem;
+  overflow-x: auto;           /* horizontal scroll on mobile */
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
   position: sticky; top: 0; z-index: 50;
+  align-items: center;
 }
+.week-strip::-webkit-scrollbar { display: none; }
+
+/* Desktop: allow wrapping, collapse to one row by default */
+@media (min-width: 769px) {
+  .week-strip {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    overflow-y: hidden;
+    padding-right: 2.75rem;   /* room for the expand button */
+    position: relative;
+  }
+  .week-strip.collapsed {
+    max-height: 58px;         /* fits exactly one row of 40px buttons + padding */
+    overflow-y: scroll;       /* allows scrollTop positioning via JS */
+    scrollbar-width: none;    /* hide the vertical scrollbar */
+  }
+  .week-strip.collapsed::-webkit-scrollbar { display: none; }
+}
+
+/* Expand/collapse chevron — desktop only */
+.wk-expand-btn {
+  display: none;
+}
+@media (min-width: 769px) {
+  .wk-expand-btn {
+    display: flex; align-items: center; justify-content: center;
+    position: absolute; right: .65rem; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid var(--surface-border);
+    background: var(--surface-card); color: var(--text-300);
+    cursor: pointer; font-size: .75rem;
+    transition: border-color .15s, color .15s, transform .15s;
+    flex-shrink: 0;
+  }
+  .wk-expand-btn:hover { border-color: var(--primary); color: var(--primary); }
+}
+
 .wk-btn {
+  flex-shrink: 0;             /* never shrink — ensures scroll works */
   min-width: 40px; height: 40px;
   border: 2px solid var(--surface-border);
   border-radius: var(--radius-sm);
@@ -320,7 +368,7 @@ button, input, select, textarea { font-family: var(--font-family); }
   border-radius: var(--radius-lg); padding: 3rem 1.5rem; text-align: center;
 }
 
-/* ── Tracker day cards ─────────────────────────────────────── */
+/* Tracker day cards */
 .tt-day-card {
   background: var(--surface-card); border: 1px solid var(--surface-border);
   border-radius: var(--radius-lg); margin-bottom: .65rem;
@@ -332,40 +380,28 @@ button, input, select, textarea { font-family: var(--font-family); }
 .tt-day-card.is-rest    { opacity: .65; }
 .tt-day-header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: .9rem 1.1rem; min-height: 64px;
-  cursor: pointer; user-select: none; transition: background .1s;
+  padding: .9rem 1.1rem; cursor: pointer; user-select: none; gap: .5rem;
 }
-.tt-day-header:hover { background: #fafbfc; }
+.tt-day-name { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.tt-day-date { font-size: .68rem; color: var(--text-300); margin-top: .1rem; }
+.tt-day-code { font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-300); margin-bottom: .15rem; }
+.tt-day-wt   { font-size: .88rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tt-day-body { padding: .75rem 1.1rem 1rem; border-top: 1px solid var(--surface-border); }
 
-/* Day header typography */
-.tt-day-name { font-size: .88rem; font-weight: 800; line-height: 1.15; }
-.tt-day-date { font-size: .65rem; color: var(--text-300); margin-top: .15rem; }
-.tt-day-code {
-  font-size: .6rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .1em; color: var(--text-300); font-family: var(--font-mono);
-  margin-bottom: .2rem;
-}
-.tt-day-wt { font-size: .9rem; font-weight: 600; line-height: 1.2; }
-
-.tt-day-body { padding: .9rem 1.1rem 1.25rem; border-top: 1px solid var(--surface-border); }
-
-/* Exercise cards inside day body */
-.tt-ex-card {
+/* Exercise rows inside day cards */
+.tt-ex-row {
   background: var(--surface-subtle); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md); padding: .9rem; margin-bottom: .85rem;
+  border-radius: var(--radius-md); padding: .75rem .9rem; margin-bottom: .5rem;
 }
-.tt-ex-card:last-child { margin-bottom: 0; }
-.tt-ex-name    { font-size: .88rem; font-weight: 600; color: var(--text-900); }
-.tt-ex-planned { font-size: .72rem; color: var(--text-500); margin-top: .2rem; }
-.tt-ex-inputs { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .75rem; align-items: flex-end; }
-.tt-ex-inp    { flex: 1; min-width: 72px; }
+.tt-ex-name { font-size: .88rem; font-weight: 600; color: var(--text-900); margin-bottom: .45rem; }
+.tt-ex-fields { display: flex; gap: .4rem; flex-wrap: wrap; align-items: flex-end; }
+.tt-ex-inp { flex: 1; min-width: 68px; }
 .tt-ex-inp label {
-  font-size: .62rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: .07em; color: var(--text-500); display: block; margin-bottom: .3rem;
+  font-size: .6rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text-500); display: block; margin-bottom: .2rem;
 }
-.tt-ex-inp-note { flex: 2 1 130px; min-width: 0; }
-
-/* Force PrimeNG inputNumber wrapper and its inner input to fill the flex cell */
+.tt-ex-inp-note { flex: 2; min-width: 120px; }
+/* Make PrimeNG InputNumber fill the flex cell */
 .tt-ex-inp .p-inputnumber,
 .tt-ex-inp .p-inputnumber-input { width: 100% !important; min-width: 0 !important; }
 
@@ -453,57 +489,25 @@ button, input, select, textarea { font-family: var(--font-family); }
 .btn:active     { opacity: .85; }
 .btn-primary    { background: var(--primary); color: #fff; font-weight: 600; font-size: .88rem; padding: .65rem 1.25rem; min-height: 42px; }
 .btn-primary:hover { background: var(--primary-d); }
-.btn-ghost      { background: var(--surface-card); border: 1px solid var(--surface-border2); color: var(--text-700); font-size: .78rem; padding: .45rem .85rem; min-height: 38px; }
-.btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
-.btn-danger     { background: none; border: 1px solid #fca5a5; color: #ef4444; font-size: .75rem; padding: .4rem .75rem; min-height: 36px; }
+.btn-ghost      { background: var(--surface-subtle); border: 1px solid var(--surface-border); color: var(--text-700); font-size: .85rem; padding: .55rem 1rem; min-height: 38px; }
+.btn-ghost:hover { background: var(--surface-border); }
 
-/* Error banner */
-.dberr {
-  background: #fef2f2; border: 1px solid #fecaca;
-  border-radius: var(--radius-sm); padding: .85rem;
-  margin: .9rem 0; font-size: .82rem; color: #dc2626;
+/* Overlay (used by vanilla React pages) */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  z-index: 400; align-items: flex-end; justify-content: center;
 }
+.wrap { max-width: 680px; margin: 0 auto; padding: 0 1rem; }
 
-/* plans.php */
-.upload-zone {
-  background: var(--surface-card); border: 2px dashed var(--surface-border2);
-  border-radius: var(--radius-lg); padding: 1.75rem 1rem;
-  text-align: center; cursor: pointer; transition: border-color .2s, background .2s;
-}
-.upload-zone:hover, .upload-zone.drag { border-color: var(--primary); background: #eff6ff; }
-.upload-zone input[type="file"] { display: none; }
-.tpl-stat {
-  display: inline-flex; align-items: center; font-size: .68rem; font-weight: 500;
-  padding: .2rem .65rem; border-radius: 20px;
-  background: var(--surface-subtle); color: var(--text-500); border: 1px solid var(--surface-border);
-}
-
-/* Admin user rows */
-.user-row {
-  display: flex; align-items: center; gap: 1rem;
+/* Exercises page */
+.ex-list { padding: 1.25rem 1.5rem 5rem; }
+.ex-item {
   background: var(--surface-card); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md); padding: .9rem 1.1rem; margin-bottom: .5rem;
+  border-radius: var(--radius-lg); padding: .9rem 1.1rem; margin-bottom: .5rem;
   box-shadow: var(--shadow-sm);
 }
-.user-avatar {
-  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
-  background: var(--primary); color: #fff; font-weight: 700; font-size: .9rem;
-  display: flex; align-items: center; justify-content: center;
-}
-.user-name  { font-size: .92rem; font-weight: 600; color: var(--text-900); }
-.user-email { font-size: .75rem; color: var(--text-500); margin-top: .1rem; }
-
-/* Exercise catalog list */
-.ex-list { padding: 1rem 1.5rem 5rem; }
-.ex-list-row {
-  display: flex; align-items: center; gap: .75rem;
-  background: var(--surface-card); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md); padding: .85rem 1rem; margin-bottom: .5rem;
-  box-shadow: var(--shadow-sm); transition: box-shadow .15s;
-}
-.ex-list-row:hover { box-shadow: var(--shadow-md); }
-.ex-list-name { font-size: .92rem; font-weight: 600; color: var(--text-900); }
-.ex-list-unit { font-size: .72rem; color: var(--text-500); margin-top: .1rem; }
+.ex-item-name  { font-size: .92rem; font-weight: 700; color: var(--text-900); }
+.ex-item-meta  { font-size: .75rem; color: var(--text-500); margin-top: .1rem; }
 
 /* Exercises toolbar */
 .toolbar {
@@ -565,8 +569,7 @@ button, input, select, textarea { font-family: var(--font-family); }
 .empty { padding: 3rem 1.5rem; text-align: center; color: var(--text-300); font-size: .9rem; }
 
 @media (max-width: 768px) {
-  .week-strip  { padding: .6rem 1rem; top: var(--topbar-h); flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-  .week-strip::-webkit-scrollbar { display: none; }
+  .week-strip  { padding: .6rem 1rem; top: var(--topbar-h); }
   .toolbar     { padding: .75rem 1rem; }
   .create-form { padding: 0 1rem; }
   .tt-day-header { padding: .75rem .9rem; }
