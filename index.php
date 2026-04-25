@@ -99,7 +99,7 @@ $bootDays = array_map(fn(PlanDay $d) => [
     'is_rest'         => $d->isRest,
     'skipped'         => $d->skipped,
     'completed'       => $d->completed,
-    'scheduled_date'  => $d->scheduledDate->format('M j'),
+    'scheduled_date'  => $d->scheduledDate->format('Y-m-d'),
     'workout_type_id' => $d->workoutTypeId,
     'wt_name'         => $d->workoutTypeName,
     'type_code'       => $d->workoutTypeCode,

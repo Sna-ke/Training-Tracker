@@ -41,7 +41,7 @@ interface LogForm {
             <div class="tt-day-name" [style.color]="(day.is_rest||isSkipped) ? 'var(--text-muted)' : day.color">
               {{ day.day_name }}
             </div>
-            <div class="tt-day-date">{{ day.scheduled_date }}</div>
+            <div class="tt-day-date">{{ formattedDate }}</div>
           </div>
           <div style="width:1px;height:32px;background:var(--surface-border);flex-shrink:0"></div>
           <div style="flex:1;min-width:0">
@@ -235,6 +235,13 @@ export class DayCardComponent implements OnInit {
   instructions: WorkoutItem[] = []; strengthItems: WorkoutItem[] = []; runItems: WorkoutItem[] = [];
 
   get canInteract(): boolean { return !this.day.is_rest && !this.isSkipped; }
+
+  get formattedDate(): string {
+    if (!this.day.scheduled_date) return '';
+    return new Date(this.day.scheduled_date + 'T00:00:00')
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
   constructor(private api: ApiService) {}
   ngOnInit(): void { this.isDone = !!this.day.completed; this.isSkipped = !!this.day.skipped; }
 
@@ -269,7 +276,6 @@ export class DayCardComponent implements OnInit {
   buildPayloads(): LogPayload[] {
     return [...this.strengthItems, ...this.runItems].filter(it => it.exercise_id).map(it => {
       const f = this.forms[it.item_id];
-      // Use logged value; fall back to planned value when the field was left blank.
       const pick = (logged: number | null, planned: number | null | undefined) =>
         logged !== null ? String(logged) : planned != null ? String(planned) : null;
       return {
@@ -310,14 +316,31 @@ export class DayCardComponent implements OnInit {
     });
   }
 
-  undoDone(): void { this.api.complete(this.day.id, false).subscribe({ next: () => { this.isDone = false; this.toast.emit('Marked incomplete'); } }); }
-  skip(): void { if (!confirm('Skip this day? Following workout days shift forward by 1 day.')) return; this.api.skip(this.day.id).subscribe({ next: () => { this.toast.emit('Day skipped ✓'); setTimeout(() => location.reload(), 700); } }); }
-  unskip(): void { if (!confirm('Restore this day? Following workout days shift back by 1 day.')) return; this.api.unskip(this.day.id).subscribe({ next: () => { this.toast.emit('Day restored ✓'); setTimeout(() => location.reload(), 700); } }); }
+  undoDone(): void {
+    this.api.complete(this.day.id, false).subscribe({
+      next: () => { this.isDone = false; this.toast.emit('Marked incomplete'); },
+    });
+  }
+
+  skip(): void {
+    if (!confirm('Skip this day? Following workout days shift forward by 1 day.')) return;
+    this.api.skip(this.day.id).subscribe({
+      next: () => { this.toast.emit('Day skipped ✓'); setTimeout(() => location.reload(), 700); },
+    });
+  }
+
+  unskip(): void {
+    if (!confirm('Restore this day? Following workout days shift back by 1 day.')) return;
+    this.api.unskip(this.day.id).subscribe({
+      next: () => { this.toast.emit('Day restored ✓'); setTimeout(() => location.reload(), 700); },
+    });
+  }
 
   plannedStr(it: WorkoutItem): string {
     if (!it.planned_sets || !it.planned_reps) return '';
     return `${it.planned_sets}×${it.planned_reps}${it.unit_type === 'seconds' ? 's' : ''}${it.planned_weight_kg ? ' @ '+it.planned_weight_kg+'kg' : ''}`;
   }
+
   runPlanned(it: WorkoutItem): string {
     if (it.planned_distance_km) return it.planned_distance_km + 'km planned';
     if (it.planned_duration_min) return it.planned_duration_min + 'min planned';
