@@ -13,7 +13,6 @@ export interface TrackerBoot {
   phase:        Phase;
   catColors:    Record<string, string>;
   days:         DaySummary[];
-  /** Per-week, per-day pip state. weekPips[weekNum][dayOfWeek] = 'done'|'skipped'|'logged'|'rest'|'pending' */
   weekPips:     Record<number, Record<number, string>>;
 }
 
@@ -50,13 +49,86 @@ export interface AdminBoot {
   isAdmin:       boolean;
 }
 
+export interface EditProfileBoot {
+  user:             ProfileUser;
+  privacy:          PrivacySettings;
+  coaches:          CoachRelation[];
+  availableCoaches: CoachUser[];
+}
+
+export interface ViewProfileBoot {
+  target:          ProfileUser;
+  isSelf:          boolean;
+  viewerIsCoach:   boolean;
+  privacy:         PrivacySettings;
+  consecutiveDays: number;
+  activity:        ActivityData;
+}
+
+// ── Profile models ─────────────────────────────────────────────
+export interface ProfileUser {
+  id:     number;
+  name:   string;
+  email:  string;
+  role:   string;
+  avatar: string | null;
+  bio:    string | null;
+}
+
+export interface PrivacySettings {
+  share_journeys:      boolean;
+  share_exercise_logs: boolean;
+  share_status:        boolean;
+}
+
+export interface CoachRelation {
+  id:           number;
+  coach_id:     number;
+  coach_name:   string;
+  coach_avatar: string | null;
+  coach_email:  string;
+  status:       'pending' | 'accepted' | 'declined';
+}
+
+export interface CoachUser {
+  id:     number;
+  name:   string;
+  email:  string;
+  avatar: string | null;
+}
+
+export interface ActivityData {
+  journeys:      JourneyActivity[];
+  exercise_logs: ExerciseLogActivity[];
+}
+
+export interface JourneyActivity {
+  id:            number;
+  plan_name:     string;
+  template_name: string;
+  total_weeks:   number;
+  days_done:     number;
+  days_total:    number;
+}
+
+export interface ExerciseLogActivity {
+  exercise_name: string;
+  sets_done:     number | null;
+  reps_done:     number | null;
+  weight_kg:     number | null;
+  distance_km:   number | null;
+  duration_min:  number | null;
+  pace_per_km:   number | null;
+  scheduled_date: string;
+}
+
 // ── Domain models ──────────────────────────────────────────────
 export interface Phase {
-  f:   number;
-  t:   number;
-  name:string;
-  col: string;
-  sh:  string;
+  f:    number;
+  t:    number;
+  name: string;
+  col:  string;
+  sh:   string;
 }
 
 export interface CategoryConfig {
@@ -114,7 +186,6 @@ export interface WorkoutItem {
   exercise_name:        string | null;
   category:             string | null;
   unit_type:            string | null;
-  // Merged log fields (populated by get_day)
   sets_done:            number | null;
   reps_done:            number | null;
   log_weight:           number | null;
@@ -143,23 +214,23 @@ export interface ExerciseMedia {
 }
 
 export interface HistoryRow {
-  week_number:      number;
-  scheduled_date:   string;
-  day_of_week:      number;
-  eff_sets:         number | null;
-  eff_distance:     number | null;
-  eff_duration:     number | null;
-  planned_sets:     number | null;
-  planned_reps:     number | null;
-  planned_weight_kg:number | null;
-  sets_done:        number | null;
-  reps_done:        number | null;
-  weight_kg:        number | null;
-  distance_km:      number | null;
-  duration_min:     number | null;
-  pace_per_km:      number | null;
-  heart_rate_avg:   number | null;
-  notes:            string | null;
+  week_number:       number;
+  scheduled_date:    string;
+  day_of_week:       number;
+  eff_sets:          number | null;
+  eff_distance:      number | null;
+  eff_duration:      number | null;
+  planned_sets:      number | null;
+  planned_reps:      number | null;
+  planned_weight_kg: number | null;
+  sets_done:         number | null;
+  reps_done:         number | null;
+  weight_kg:         number | null;
+  distance_km:       number | null;
+  duration_min:      number | null;
+  pace_per_km:       number | null;
+  heart_rate_avg:    number | null;
+  notes:             string | null;
 }
 
 export interface Template {
@@ -173,16 +244,16 @@ export interface Template {
 }
 
 export interface PlanWithProgress {
-  id:              number;
-  name:            string;
-  start_date:      string;
-  athlete_name:    string | null;
-  template_name:   string | null;
-  total_weeks:     number;
-  days_done:       number;
-  days_total:      number;
-  pct:             number;
-  week_summaries:  Record<number, { done: number; total: number }>;
+  id:             number;
+  name:           string;
+  start_date:     string;
+  athlete_name:   string | null;
+  template_name:  string | null;
+  total_weeks:    number;
+  days_done:      number;
+  days_total:     number;
+  pct:            number;
+  week_summaries: Record<number, { done: number; total: number }>;
 }
 
 export interface BuilderDay {
@@ -196,7 +267,6 @@ export interface BuilderDay {
   exercises:       WorkoutItem[];
 }
 
-// ── Log payload (sent to save.php) ────────────────────────────
 export interface LogPayload {
   plan_day_id:     number;
   workout_item_id: number;
@@ -211,7 +281,6 @@ export interface LogPayload {
   notes?:          string | null;
 }
 
-// ── Builder exercise row (in memory only) ────────────────────
 export interface BuilderExerciseRow {
   exercise_id:          number;
   exercise_name:        string;
@@ -224,7 +293,6 @@ export interface BuilderExerciseRow {
   item_note:            string;
 }
 
-// ── Admin ─────────────────────────────────────────────────────
 export interface User {
   id:         number;
   name:       string;

@@ -214,13 +214,13 @@ final class UserRepository extends BaseRepository
             SELECT el.exercise_id, e.name AS exercise_name,
                    el.sets_done, el.reps_done, el.weight_kg,
                    el.distance_km, el.duration_min, el.pace_per_km,
-                   pd.scheduled_date
+                   pd.scheduled_date, el.updated_at
             FROM exercise_logs el
             JOIN plan_days pd ON pd.id = el.plan_day_id
             JOIN training_plans tp ON tp.id = pd.training_plan_id
             JOIN exercises e ON e.id = el.exercise_id
             WHERE tp.user_id = ?
-            ORDER BY pd.scheduled_date DESC
+            ORDER BY el.updated_at DESC, el.id DESC
             LIMIT ?
         ', [$userId, $limit]);
 
