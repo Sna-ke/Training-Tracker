@@ -27,10 +27,10 @@ $_currentPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
 .tt-user-menu-trigger:hover { background: rgba(255,255,255,.08); }
 .tt-sidebar-logout-hint { font-size: .72rem; color: rgba(255,255,255,.45); }
 .tt-user-popup {
-  position: absolute; bottom: calc(100% + 8px); left: 0; right: 0;
+  position: fixed; bottom: auto; left: auto;
   background: #1e2d45; border: 1px solid rgba(255,255,255,.12);
   border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.4);
-  z-index: 500; overflow: hidden; display: none; min-width: 200px;
+  z-index: 9999; overflow: hidden; display: none; min-width: 220px; width: 220px;
 }
 .tt-user-popup.open { display: block; }
 .tt-user-popup-header { display: flex; align-items: center; gap: .65rem; padding: .9rem 1rem .75rem; }
@@ -58,6 +58,12 @@ function ttToggleUserMenu(e) {
   var popup   = document.getElementById('ttUserPopup');
   var trigger = document.getElementById('ttUserMenuTrigger');
   var isOpen  = popup.classList.contains('open');
+  if (!isOpen) {
+    var rect = trigger.getBoundingClientRect();
+    popup.style.left   = rect.left + 'px';
+    popup.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+    popup.style.top    = 'auto';
+  }
   popup.classList.toggle('open', !isOpen);
   trigger.setAttribute('aria-expanded', String(!isOpen));
 }
