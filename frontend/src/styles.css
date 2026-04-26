@@ -325,10 +325,16 @@ button, input, select, textarea { font-family: var(--font-family); }
   position: absolute; bottom: 3px;
   display: flex; gap: 2px; align-items: center;
 }
+.wk-pip-dot {
+  position: absolute; bottom: 3px;
+  display: flex; gap: 2px; align-items: center;
+}
 .wk-pip {
   width: 3px; height: 3px; border-radius: 50%;
   background: var(--surface-border2); flex-shrink: 0; transition: background .2s;
 }
+.wk-pip-dot.done    { opacity: 1; background: var(--success); }
+.wk-pip-dot.skipped { opacity: .6; background: var(--warning); }
 /* Pip state colours */
 .wk-pip--done    { background: var(--success); }
 .wk-pip--logged  { background: var(--primary); }
@@ -340,18 +346,6 @@ button, input, select, textarea { font-family: var(--font-family); }
 .wk-btn.active .wk-pip--done    { background: #3fc424;  opacity: 1; }
 .wk-btn.active .wk-pip--logged  { background: #8db5bf; opacity: 1; }
 .wk-btn.active .wk-pip--skipped { background: #f86a4d; opacity: 1; }
-
-/* Bottom nav */
-.bot-nav {
-  position: fixed; bottom: 0; right: 0;
-  background: rgba(255,255,255,.97);
-  border-top: 1px solid var(--surface-border);
-  backdrop-filter: blur(12px);
-  padding: .65rem 1.5rem calc(.65rem + var(--sb));
-  display: flex; gap: .6rem; align-items: center; z-index: 100;
-}
-@media (min-width: 769px) { .bot-nav { left: var(--sidebar-w); } }
-@media (max-width: 768px) { .bot-nav { left: 0; } }
 
 /* Journey cards */
 .journey-card {
@@ -368,11 +362,17 @@ button, input, select, textarea { font-family: var(--font-family); }
   border-radius: var(--radius-lg); padding: 3rem 1.5rem; text-align: center;
 }
 
-/* Tracker day cards */
+/* Day list */
+.tt-day-list { padding: .85rem 1.5rem 5rem; display: flex; flex-direction: column; gap: .5rem; }
+
+/* Day cards (tracker) */
 .tt-day-card {
-  background: var(--surface-card); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-lg); margin-bottom: .65rem;
-  box-shadow: var(--shadow-sm); overflow: hidden; transition: box-shadow .15s;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: .65rem;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden; transition: box-shadow .15s;
 }
 .tt-day-card:hover      { box-shadow: var(--shadow-md); }
 .tt-day-card.is-done    { border-left: 4px solid var(--success); }
@@ -389,12 +389,15 @@ button, input, select, textarea { font-family: var(--font-family); }
 .tt-day-body { padding: .75rem 1.1rem 1rem; border-top: 1px solid var(--surface-border); }
 
 /* Exercise rows inside day cards */
-.tt-ex-row {
+/* .tt-ex-card is the Angular template alias for .tt-ex-row */
+.tt-ex-row, .tt-ex-card {
   background: var(--surface-subtle); border: 1px solid var(--surface-border);
   border-radius: var(--radius-md); padding: .75rem .9rem; margin-bottom: .5rem;
 }
 .tt-ex-name { font-size: .88rem; font-weight: 600; color: var(--text-900); margin-bottom: .45rem; }
-.tt-ex-fields { display: flex; gap: .4rem; flex-wrap: wrap; align-items: flex-end; }
+.tt-ex-planned { font-size: .72rem; color: var(--text-300); margin-top: -.25rem; margin-bottom: .45rem; }
+/* .tt-ex-inputs is the Angular template alias for .tt-ex-fields */
+.tt-ex-fields, .tt-ex-inputs { display: flex; gap: .4rem; flex-wrap: wrap; align-items: flex-end; }
 .tt-ex-inp { flex: 1; min-width: 68px; }
 .tt-ex-inp label {
   font-size: .6rem; font-weight: 600; text-transform: uppercase;

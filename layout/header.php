@@ -33,7 +33,8 @@ $_currentPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
   z-index: 9999; overflow: hidden; display: none; min-width: 220px; width: 220px;
 }
 .tt-user-popup.open { display: block; }
-.tt-user-popup-header { display: flex; align-items: center; gap: .65rem; padding: .9rem 1rem .75rem; }
+.tt-user-popup-header { display: flex; align-items: center; gap: .65rem; padding: .9rem 1rem .75rem; cursor:pointer; }
+.tt-user-popup-header:hover { background: rgba(255,255,255,.08); color: #fff; }
 .tt-user-popup-avatar {
   width: 36px; height: 36px; border-radius: 50%;
   background: #3b82f6; display: flex; align-items: center; justify-content: center;
@@ -48,6 +49,12 @@ $_currentPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
   transition: background .12s, color .12s;
 }
 .tt-user-popup-item:hover { background: rgba(255,255,255,.08); color: #fff; }
+.tt-user-popup-title-item {
+  display: flex; align-items: center; gap: .6rem;
+  font-size: .84rem; color: rgba(255,255,255,.8); text-decoration: none;
+  transition: background .12s, color .12s;
+}
+.tt-user-popup-title-item:hover { background: rgba(255,255,255,.08); color: #fff; }
 .tt-user-popup-signout { color: rgba(251,113,133,.85); }
 .tt-user-popup-signout:hover { background: rgba(251,113,133,.1); color: #fb7185; }
 .tt-user-popup-icon { font-style: normal; width: 1.1rem; text-align: center; }
@@ -139,13 +146,13 @@ document.addEventListener('keydown', function(e) {
 
       <!-- Popup menu -->
       <div class="tt-user-popup" id="ttUserPopup" role="menu">
-        <div class="tt-user-popup-header">
-          <span class="tt-user-popup-avatar"><?= htmlspecialchars($_authUser->displayAvatar()) ?></span>
-          <div>
-            <div class="tt-user-popup-name"><?= htmlspecialchars($_authUser->name) ?></div>
-            <div class="tt-user-popup-email"><?= htmlspecialchars($_authUser->email) ?></div>
+          <div class="tt-user-popup-header" onclick="location.href='<?= htmlspecialchars($basePath) ?>user/view_profile.php';">
+            <span class="tt-user-popup-avatar"><?= htmlspecialchars($_authUser->displayAvatar()) ?></span>
+            <div>
+              <div class="tt-user-popup-name"><?= htmlspecialchars($_authUser->name) ?></a></div>
+              <div class="tt-user-popup-email"><?= htmlspecialchars($_authUser->email) ?></div>
+            </div>
           </div>
-        </div>
         <div class="tt-user-popup-divider"></div>
         <a href="<?= htmlspecialchars($basePath) ?>user/edit_profile.php" class="tt-user-popup-item" role="menuitem">
           <span class="tt-user-popup-icon">✏️</span> Edit Profile

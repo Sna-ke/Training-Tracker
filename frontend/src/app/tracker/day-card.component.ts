@@ -228,7 +228,6 @@ export class DayCardComponent implements OnInit {
   @Output() toast        = new EventEmitter<string>();
   @Output() openHistory  = new EventEmitter<{ id: number; name: string }>();
   @Output() openMedia    = new EventEmitter<{ id: number; name: string }>();
-  /** Emitted whenever this day's pip state changes. */
   @Output() stateChange  = new EventEmitter<{ dayOfWeek: number; state: 'logged' | 'done' | 'skipped' | 'pending' }>();
 
   open = false; loaded = false; saving = false;
@@ -268,14 +267,17 @@ export class DayCardComponent implements OnInit {
         this.forms = {};
         for (const it of [...this.strengthItems, ...this.runItems]) {
           this.forms[it.item_id] = {
-            sets: it.sets_done ?? null, reps: it.reps_done ?? null, weight: it.log_weight ?? null,
-            distance: it.distance_km ?? null, duration: it.duration_min ?? null,
-            pace: it.pace_per_km ?? null, hr: it.heart_rate_avg ?? null, note: it.log_notes ?? '',
+            sets:     it.sets_done      ?? null,
+            reps:     it.reps_done      ?? null,
+            weight:   it.log_weight     ?? null,
+            distance: it.distance_km    ?? null,
+            duration: it.duration_min   ?? null,
+            pace:     it.pace_per_km    ?? null,
+            hr:       it.heart_rate_avg ?? null,
+            note:     it.log_notes      ?? '',
           };
         }
         this.loaded = true;
-
-        // If log data already exists, emit logged state (unless already done)
         if (!this.isDone && this.day.has_log) {
           this.stateChange.emit({ dayOfWeek: this.day.day_of_week, state: 'logged' });
         }
@@ -298,8 +300,8 @@ export class DayCardComponent implements OnInit {
         weight:   pick(f.weight,   it.planned_weight_kg),
         distance: pick(f.distance, it.planned_distance_km),
         duration: pick(f.duration, it.planned_duration_min),
-        pace:     f.pace  !== null ? String(f.pace)  : null,
-        hr:       f.hr    !== null ? String(f.hr)    : null,
+        pace:     f.pace !== null ? String(f.pace) : null,
+        hr:       f.hr   !== null ? String(f.hr)   : null,
         notes:    f.note || null,
       };
     });
@@ -373,7 +375,7 @@ export class DayCardComponent implements OnInit {
 
   plannedStr(it: WorkoutItem): string {
     if (!it.planned_sets || !it.planned_reps) return '';
-    return `${it.planned_sets}×${it.planned_reps}${it.unit_type === 'seconds' ? 's' : ''}${it.planned_weight_kg ? ' @ '+it.planned_weight_kg+'kg' : ''}`;
+    return `${it.planned_sets}×${it.planned_reps}${it.unit_type === 'seconds' ? 's' : ''}${it.planned_weight_kg ? ' @ ' + it.planned_weight_kg + 'kg' : ''}`;
   }
 
   runPlanned(it: WorkoutItem): string {
