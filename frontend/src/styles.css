@@ -616,3 +616,30 @@ button, input, select, textarea { font-family: var(--font-family); }
 
 /* Tabs */
 .p-tabview .p-tabview-nav li .p-tabview-nav-link { padding: .6rem 1rem; font-size: .82rem; }
+
+/* ── Exercises catalog list rows (Angular exercises component) ── */
+.ex-list-row {
+  display: flex; align-items: center; gap: .75rem;
+  background: var(--surface-card); border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg); padding: .85rem 1.1rem; margin-bottom: .5rem;
+  box-shadow: var(--shadow-sm); transition: box-shadow .15s;
+}
+.ex-list-row:hover  { box-shadow: var(--shadow-md); }
+.ex-list-name { font-size: .92rem; font-weight: 700; color: var(--text-900); }
+.ex-list-unit { font-size: .72rem; color: var(--text-500); margin-top: .1rem; }
+
+/* ── Admin user rows (Angular admin component) ── */
+.user-row {
+  display: flex; align-items: center; gap: .75rem;
+  background: var(--surface-card); border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg); padding: .85rem 1.1rem; margin-bottom: .5rem;
+  box-shadow: var(--shadow-sm);
+}
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #3b82f6; color: #fff;
+  font-weight: 700; font-size: .9rem;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.user-name  { font-size: .9rem; font-weight: 600; color: var(--text-900); }
+.user-email { font-size: .75rem; color: var(--text-500); margin-top: .1rem; }
