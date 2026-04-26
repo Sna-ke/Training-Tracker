@@ -13,7 +13,7 @@ final class UserRepository extends BaseRepository
     public function findById(int $id): ?User
     {
         $row = $this->db->fetchOne(
-            'SELECT id,name,email,role,is_active,created_at
+            'SELECT id,name,email,avatar,bio,role,is_active,created_at
              FROM users WHERE id = ?',
             [$id]
         );
@@ -33,7 +33,7 @@ final class UserRepository extends BaseRepository
     public function findAll(): array
     {
         $rows = $this->db->fetchAll(
-            'SELECT id,name,email,role,is_active,created_at
+            'SELECT id,name,email,avatar,bio,role,is_active,created_at
              FROM users ORDER BY created_at DESC'
         );
         return array_map(User::fromRow(...), $rows);
@@ -59,6 +59,19 @@ final class UserRepository extends BaseRepository
         $this->db->execute(
             'UPDATE users SET name=?, email=? WHERE id=?',
             [trim($name), mb_strtolower(trim($email)), $id]
+        );
+    }
+
+    public function updateFullProfile(
+        int     $id,
+        string  $name,
+        string  $email,
+        ?string $avatar,
+        ?string $bio,
+    ): void {
+        $this->db->execute(
+            'UPDATE users SET name=?, email=?, avatar=?, bio=? WHERE id=?',
+            [trim($name), mb_strtolower(trim($email)), $avatar ?: null, $bio ?: null, $id]
         );
     }
 
@@ -99,17 +112,10 @@ final class UserRepository extends BaseRepository
 
     // ── Sessions ───────────────────────────────────────────────
 
-    /** Create a session token, return it. */
-    public function createSession(int $userId, int $ttlDays = 30): string
+    public function createSession(int $userId, int $days = 30): string
     {
-        // Prune expired sessions for this user first
-        $this->db->execute(
-            'DELETE FROM user_sessions WHERE user_id=? AND expires_at < NOW()',
-            [$userId]
-        );
-
-        $token     = bin2hex(random_bytes(32)); // 64 hex chars
-        $expiresAt = date('Y-m-d H:i:s', time() + $ttlDays * 86400);
+        $token     = bin2hex(random_bytes(32));
+        $expiresAt = date('Y-m-d H:i:s', strtotime("+{$days} days"));
 
         $this->db->insert(
             'INSERT INTO user_sessions (user_id, token, expires_at) VALUES (?, ?, ?)',
@@ -118,11 +124,10 @@ final class UserRepository extends BaseRepository
         return $token;
     }
 
-    /** Validate a token. Returns the User if valid, null otherwise. */
-    public function validateSession(string $token): ?User
+    public function findUserByToken(string $token): ?User
     {
         $row = $this->db->fetchOne(
-            'SELECT u.id,u.name,u.email,u.role,u.is_active,u.created_at
+            'SELECT u.id,u.name,u.email,u.avatar,u.bio,u.role,u.is_active,u.created_at
              FROM user_sessions s
              JOIN users u ON u.id = s.user_id
              WHERE s.token = ? AND s.expires_at > NOW() AND u.is_active = 1',
@@ -131,16 +136,29 @@ final class UserRepository extends BaseRepository
         return $row ? User::fromRow($row) : null;
     }
 
-    /** Destroy a specific session token (logout). */
     public function deleteSession(string $token): void
     {
-        $this->db->execute('DELETE FROM user_sessions WHERE token = ?', [$token]);
+        $this->db->execute(
+            'DELETE FROM user_sessions WHERE token = ?',
+            [$token]
+        );
     }
 
     /** Destroy all sessions for a user (force logout everywhere). */
     public function deleteAllSessions(int $userId): void
     {
         $this->db->execute('DELETE FROM user_sessions WHERE user_id = ?', [$userId]);
+    }
+
+    public function deleteExpiredSessions(): int
+    {
+        return $this->db->execute('DELETE FROM user_sessions WHERE expires_at < NOW()');
+    }
+
+    /** Alias kept for backwards compatibility with Auth.php pre-v5. */
+    public function validateSession(string $token): ?User
+    {
+        return $this->findUserByToken($token);
     }
 
     /** Count active admin accounts (used to prevent de-admining the last admin). */

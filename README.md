@@ -33,6 +33,7 @@ Built for self-hosting on a standard PHP/MySQL stack with an Angular frontend.
 - **Plan import** — upload a structured JSON file to create a template with exercises, workout types, and media links
 - **Exercise catalog** — searchable, filterable list of all exercises with inline editing and creation
 - **Multi-user** — session-based auth, athlete and admin roles, admin user management panel
+- **User profiles** — each user can set an emoji avatar, display name, email, and bio via `/profile.php`
 - **Planned value fallback** — when logging, planned values (sets, reps, distance etc.) are saved as the log entry if the user leaves a field blank
 
 ---
@@ -61,97 +62,55 @@ Built for self-hosting on a standard PHP/MySQL stack with an Angular frontend.
 
 All SQL lives in **Repository** classes, one per domain. **Service** classes hold business logic. PHP controller scripts (`index.php`, `journeys.php`, etc.) are thin — they load data, serialise it to JSON, and render the HTML shell.
 
-```
-Controller (PHP page)
-  └── Repository  ←── all SQL here
-  └── Service     ←── business logic (scheduling, import)
-  └── Model       ←── value objects / immutable data
-```
+### Frontend — Angular 17 (standalone components)
 
-No SQL appears in controllers or views.
-
-### Frontend — Angular bootstrapped inside PHP shell
-
-Each PHP page sets two global JavaScript variables before the Angular bundle loads:
-
-```js
-window.APP_PAGE = "tracker";           // tells Angular which component to render
-window.TRACKER_BOOT = { ... };         // page data, no extra HTTP round-trip needed
-```
-
-Angular's `AppComponent` reads `APP_PAGE` and renders the corresponding page component via `@switch`. The PHP-rendered sidebar shell is always present; Angular mounts inside `<app-root>` within the `<main class="tt-main">` content area.
-
-```
-Browser request
-  → PHP controller (loads data from DB)
-  → PHP renders: sidebar shell + <app-root> + window.APP_PAGE + window.*_BOOT
-  → Angular bootstraps, reads boot data, renders page component
-```
-
-### CSS — Single source of truth
-
-| File | Purpose |
-|---|---|
-| `public/css/app.css` | **Shell layout only** — sidebar, topbar, `.tt-main`. No component styles, no resets. |
-| `frontend/src/styles.css` → `public/dist/styles.css` | **Everything else** — PrimeNG theme, design tokens, all component classes. Loaded on every page. |
-
-No page-specific CSS files. No scoped `styles:[]` in Angular components. Every class is defined once in the global stylesheet and referenced by name in templates.
+One Angular app (`frontend/`) compiles to `public/dist/`. Each PHP page sets `window.APP_PAGE` to tell the root `AppComponent` which page component to render, and passes boot data as `window.*_BOOT` globals to avoid a redundant initial HTTP round-trip.
 
 ---
 
 ## Project Structure
 
 ```
-/
-├── app/                          PHP application classes
-│   ├── autoload.php              PSR-4 autoloader
-│   ├── Auth.php                  Session-based auth singleton
-│   ├── Database.php              PDO singleton wrapper
+├── app/
+│   ├── autoload.php              Simple PSR-4 class autoloader
+│   ├── Auth.php                  Cookie-based session auth (require / requireAdmin / bustCache)
+│   ├── Database.php              PDO wrapper (singleton)
 │   ├── Models/
-│   │   ├── Exercise.php          Immutable value object + CATEGORIES const
+│   │   ├── User.php              User value object (id, name, email, avatar, bio, role)
 │   │   ├── Plan.php
-│   │   ├── PlanDay.php
-│   │   └── User.php
+│   │   ├── Exercise.php
+│   │   └── ...
 │   ├── Repositories/
 │   │   ├── BaseRepository.php
+│   │   ├── UserRepository.php    findById/findAll/create/updateFullProfile/updatePassword/sessions
+│   │   ├── PlanRepository.php
 │   │   ├── ExerciseRepository.php
-│   │   ├── PlanDayRepository.php   findByWeek orders by scheduled_date
-│   │   ├── PlanRepository.php      findAllWithProgress includes week_summaries
-│   │   ├── UserRepository.php
-│   │   └── WorkoutRepository.php
+│   │   └── ...
 │   └── Services/
-│       ├── PlanBuilderService.php
-│       ├── PlanScheduleService.php   skip/unskip day shifting logic
-│       └── TemplateImportService.php JSON plan import
+│       └── ...
 │
-├── frontend/                     Angular 17 workspace
-│   ├── package.json
-│   ├── angular.json              Outputs to public/dist/ (browser:"" — no subdirectory)
-│   ├── tsconfig.json
-│   └── src/
-│       ├── main.ts               Bootstrap entry point
-│       ├── styles.css            Global stylesheet (single source of truth)
-│       └── app/
-│           ├── app.component.ts       Root — switches on window.APP_PAGE
-│           ├── app.config.ts          Provides HttpClient, Animations, MessageService
-│           ├── models/index.ts        All TypeScript interfaces
-│           ├── services/
-│           │   └── api.service.ts     All save.php + builder_api.php calls
-│           ├── tracker/
-│           │   ├── tracker.component.ts    Week strip, progress bar, day list
-│           │   └── day-card.component.ts   Exercise logging, skip/done actions
-│           ├── builder/
-│           │   └── builder.component.ts    Create plan form + week-by-week editor
-│           ├── journeys/
-│           │   └── journeys.component.ts   Journey list with weekly progress grid
-│           ├── exercises/
-│           │   └── exercises.component.ts  Catalog with inline create/edit
-│           ├── admin/
-│           │   └── admin.component.ts      User management
-│           └── shared/
-│               ├── exercise-modal.component.ts   History + Media tabs dialog
-│               ├── exercise-picker.component.ts  Exercise search/filter dialog
-│               └── toast.component.ts            Stub (PrimeNG toast used directly)
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── models/
+│   │   │   │   └── index.ts           TypeScript interfaces
+│   │   │   ├── services/
+│   │   │   │   └── api.service.ts     All save.php + builder_api.php calls
+│   │   │   ├── tracker/
+│   │   │   │   ├── tracker.component.ts    Week strip, progress bar, day list
+│   │   │   │   └── day-card.component.ts   Exercise logging, skip/done actions
+│   │   │   ├── builder/
+│   │   │   │   └── builder.component.ts    Create plan form + week-by-week editor
+│   │   │   ├── journeys/
+│   │   │   │   └── journeys.component.ts   Journey list with weekly progress grid
+│   │   │   ├── exercises/
+│   │   │   │   └── exercises.component.ts  Catalog with inline create/edit
+│   │   │   ├── admin/
+│   │   │   │   └── admin.component.ts      User management
+│   │   │   └── shared/
+│   │   │       ├── exercise-modal.component.ts   History + Media tabs dialog
+│   │   │       ├── exercise-picker.component.ts  Exercise search/filter dialog
+│   │   │       └── toast.component.ts            Stub (PrimeNG toast used directly)
 │
 ├── public/
 │   ├── css/
@@ -162,7 +121,7 @@ No page-specific CSS files. No scoped `styles:[]` in Angular components. Every c
 │       └── zone.js               Copied from node_modules by postbuild script
 │
 ├── layout/
-│   ├── header.php                Sidebar shell, nav, loads app.css + dist/styles.css
+│   ├── header.php                Sidebar shell, nav, user popup menu, loads styles
 │   └── footer.php                Closes shell, loads zone.js + main.js (Angular pages only)
 │
 ├── index.php                     Journey tracker (APP_PAGE=tracker)
@@ -171,6 +130,7 @@ No page-specific CSS files. No scoped `styles:[]` in Angular components. Every c
 ├── exercises.php                 Exercise catalog (APP_PAGE=exercises)
 ├── plans.php                     Template manager (pure PHP, no Angular)
 ├── plan_editor.php               Template day editor
+├── profile.php                   User profile editor (avatar, name, email, bio, password)
 ├── save.php                      Main AJAX API (GET + POST actions)
 ├── builder_api.php               Builder-specific AJAX API
 ├── admin/users.php               Admin panel (APP_PAGE=admin)
@@ -181,14 +141,16 @@ No page-specific CSS files. No scoped `styles:[]` in Angular components. Every c
 ├── schema_media.sql              exercise_media table
 ├── schema_builder.sql            Builder-specific alterations
 ├── schema_v3.sql                 exercise.description column
-└── schema_v4.sql                 users, user_sessions, multi-user columns
+├── schema_v4.sql                 users, user_sessions, multi-user columns
+└── schema_v5.sql                 users.avatar + users.bio columns
 ```
 
 ---
 
 ## Database Schema
 
-All schema files must be applied in order: `schema.sql` → `schema_media.sql` → `schema_builder.sql` → `schema_v3.sql` → `schema_v4.sql`
+All schema files must be applied in order:
+`schema.sql` → `schema_media.sql` → `schema_builder.sql` → `schema_v3.sql` → `schema_v4.sql` → `schema_v5.sql`
 
 ### Core tables
 
@@ -196,110 +158,48 @@ All schema files must be applied in order: `schema.sql` → `schema_media.sql` �
 |---|---|
 | `exercises` | Exercise definitions — slug, name, category, unit_type |
 | `exercise_media` | YouTube / NRC / web links attached to exercises |
-| `workout_types` | Named workout sessions (e.g. "Easy Run", "Strength A") |
-| `workout_items` | Exercises within a workout type, with planned sets/reps/distance |
-| `plan_templates` | Reusable training plan blueprints |
-| `plan_template_days` | Week/day assignments within a template |
-| `training_plans` | A user's instance of a template ("journey") |
-| `plan_days` | Individual scheduled days within a journey — `scheduled_date` shifts on skip |
-| `exercise_logs` | Logged values per workout item per plan day. UNIQUE KEY `(plan_day_id, workout_item_id)` |
-| `users` | Accounts with `athlete` / `admin` roles |
-| `user_sessions` | Session tokens |
-
-### Key column notes
-
-- `plan_days.scheduled_date` — shifts forward when a day is skipped, back when restored. `week_number` never changes.
-- `plan_days.original_date` — immutable; used as the stable week boundary anchor.
-- `exercise_logs.sets_done` etc. — nullable; PHP fallback fills planned values when blank.
+| `workout_types` | Named workout sessions (e.g. "Easy Run", "Tempo") |
+| `workout_items` | Exercises inside a workout type with planned values |
+| `plan_templates` | Reusable plan blueprints (global or user-created) |
+| `plan_template_days` | Day slots in a template (week × day_of_week) |
+| `plan_template_day_items` | Workout assignments per template day |
+| `training_plans` | A user's active journey instantiated from a template |
+| `plan_days` | Concrete dated days within a journey |
+| `exercise_logs` | Logged exercise results per plan day |
+| `users` | Accounts — name, email, password_hash, avatar, bio, role |
+| `user_sessions` | DB-stored auth tokens with expiry |
 
 ---
 
 ## Setup & Installation
 
-### Prerequisites
-
-- PHP 8.1+ with PDO MySQL extension
-- MySQL 8 or MariaDB 10.6+
-- Node.js 18+ (Angular build only)
-- MAMP, XAMPP, or any PHP/MySQL local server
-
-### 1. Database
-
-```sql
--- Apply schemas in order
-SOURCE schema.sql;
-SOURCE schema_media.sql;
-SOURCE schema_builder.sql;
-SOURCE schema_v3.sql;
-SOURCE schema_v4.sql;
-```
-
-### 2. PHP config
-
-Copy the example config and fill in your database credentials:
-
-```bash
-cp config.example.php config.php
-```
-
-Then edit `config.php`:
-
-```php
-return [
-    'db_host' => 'localhost',
-    'db_port' => '3306',
-    'db_name' => 'training_tracker',
-    'db_user' => 'root',
-    'db_pass' => 'your_password',
-];
-```
-
-`config.php` is in `.gitignore` and must never be committed.
-
-### 3. Angular build
-
-```bash
-cd frontend
-npm install
-npm run build
-```
-
-This outputs `public/dist/main.js`, `public/dist/styles.css`, and copies `zone.js` from `node_modules` via the `postbuild` script.
-
-### 4. Browse
-
-Point your web server root at the project directory and open it in a browser. Register the first user — they will automatically be granted admin role.
+1. Clone the repo
+2. Point MAMP (or your PHP server) document root at the project folder
+3. Create database and apply schemas in order:
+   ```bash
+   mysql -u root -p < schema.sql
+   mysql -u root -p training_plan < schema_media.sql
+   mysql -u root -p training_plan < schema_builder.sql
+   mysql -u root -p training_plan < schema_v3.sql
+   mysql -u root -p training_plan < schema_v4.sql
+   mysql -u root -p training_plan < schema_v5.sql
+   ```
+4. Copy `config.example.php` → `config.php` and fill in DB credentials
+5. Run `php seed_admin.php` to create the first admin account
+6. Build the frontend (see below)
 
 ---
 
 ## Building the Frontend
 
-| Command | Effect |
-|---|---|
-| `npm run build` | Production build → `public/dist/` |
-| `npm run watch` | Development build with file watching |
+```bash
+cd frontend
+npm install
+npm run build        # production
+npm run watch        # development (auto-rebuild)
+```
 
-**Important:** `public/dist/` is not committed to git. Always run `npm run build` after cloning or pulling changes to the `frontend/` directory.
-
-The `postbuild` npm lifecycle hook automatically copies `zone.js` from `node_modules` to `public/dist/zone.js` using Node's `require.resolve()` — no manual step required.
-
-Zone.js is loaded synchronously in `layout/footer.php` **before** `main.js` (which is deferred). This order is required for Angular's change detection to work correctly.
-
----
-
-## Key Design Decisions
-
-**PHP sends boot data via `window.*_BOOT`** — Each PHP page loads its required data from the database and serialises it directly into a `<script>` tag before Angular loads. Angular reads this on `ngOnInit`, so the page is ready with data immediately without a separate HTTP round-trip.
-
-**`scheduled_date` shifts, `week_number` does not** — Skipping a day moves its `scheduled_date` forward one day and cascades all subsequent non-rest, non-completed days. The `week_number` is permanent — it's used to determine which days belong to which week view. `PlanDayRepository::findByWeek()` orders by `scheduled_date` so days appear in their new order within the week.
-
-**`get_day` merges logs with a separate query** — The workout items query and the exercise logs query are separate, then merged in PHP. This eliminates LEFT JOIN ambiguity (where a failed join returns NULLs silently) and ensures saved log data always appears correctly in the day card.
-
-**`[(ngModel)]` two-way binding for exercise inputs** — Each exercise item gets a `LogForm` object pre-populated from saved log data when the day card opens. Angular's two-way binding handles both display of saved values and capture of user edits, solving the React controlled/uncontrolled input problem that previously caused pre-filled values not to display.
-
-**Planned values as log fallback** — When `Save & Done` is triggered with blank input fields, `buildPayloads()` uses the item's `planned_sets`, `planned_reps`, `planned_distance_km` etc. as the logged value. This ensures a completion always records something meaningful.
-
-**Zone.js loaded from CDN-equivalent local copy** — Angular 17's esbuild pipeline wraps zone.js in a way that causes `ce[T] is not a function` errors in Safari when bundled. Zone.js is excluded from Angular's polyfills (`"polyfills": []` in `angular.json`) and instead copied from `node_modules` verbatim, then loaded as a plain synchronous script tag.
+Output goes to `public/dist/`.
 
 ---
 
@@ -313,6 +213,7 @@ Zone.js is loaded synchronously in `layout/footer.php` **before** `main.js` (whi
 | `/builder.php?plan_id=N` | `builder.php` | `app-builder` | Week-by-week plan editor |
 | `/exercises.php` | `exercises.php` | `app-exercises` | Exercise catalog |
 | `/plans.php` | `plans.php` | *(pure PHP)* | Template manager + JSON import |
+| `/profile.php` | `profile.php` | *(pure PHP)* | Edit own profile (avatar, name, email, bio, password) |
 | `/admin/users.php` | `admin/users.php` | `app-admin` | User management (admin only) |
 | `/login.php` | `login.php` | *(pure PHP)* | Login form |
 | `/register.php` | `register.php` | *(pure PHP)* | Registration form |
@@ -368,69 +269,18 @@ Zone.js is loaded synchronously in `layout/footer.php` **before** `main.js` (whi
 ```
 Browser loads two files on every page:
 
-public/css/app.css          ← shell layout (133 lines)
-  Sidebar, topbar, .tt-main, mobile breakpoints.
-  No design tokens. No component styles. No CSS reset.
-
-public/dist/styles.css      ← everything else (607 lines, compiled by Angular)
-  PrimeNG lara-light-blue theme
-  Design tokens (CSS custom properties)
-  Page structure: .page-header, .page-eyebrow, .page-title, .page-body
-  All component classes: .journey-card, .day-card, .wk-btn, .ex-row, etc.
-  Category chips: .cat-strength, .cat-run, etc.
-  PrimeNG overrides (tighter padding for mobile)
-  Responsive breakpoints
+public/css/app.css          ← shell layout (sidebar/topbar/main) [legacy, being phased out]
+public/dist/styles.css      ← compiled Angular styles (all design tokens + components)
 ```
 
-Every colour in the application resolves to a CSS custom property. Hardcoded hex values exist only in `app.css` (sidebar brand colour) and in the compiled PrimeNG theme.
-
-Angular components have **no `styles:[]` blocks**. All styles are global and defined once.
+Design tokens live in `:root` in `frontend/src/styles.css` and are used across all PHP and Angular templates.
 
 ---
 
-## Git Workflow
+## Key Design Decisions
 
-### What is and isn't committed
+**Zone.js loaded from CDN-equivalent local copy** — Angular 17's esbuild pipeline wraps zone.js in a way that causes `ce[T] is not a function` errors in Safari when bundled. Zone.js is excluded from Angular's polyfills (`"polyfills": []` in `angular.json`) and instead copied from `node_modules` verbatim, then loaded as a plain synchronous script tag.
 
-| Path | Committed | Reason |
-|---|---|---|
-| `config.php` | ✗ | Contains DB credentials — use `config.example.php` |
-| `public/dist/` | ✗ | Build output — regenerated by `npm run build` |
-| `public/dist/.gitkeep` | ✓ | Keeps the directory present for the web server |
-| `frontend/node_modules/` | ✗ | Restored by `npm install` |
-| `frontend/.angular/` | ✗ | Angular CLI cache |
+**Planned value fallback** — When a user logs a workout without filling in a field, the planned value is used as the logged value. This ensures a completion always records something meaningful.
 
-### First time on a new machine
-
-```bash
-git clone <repo-url>
-cd <repo>
-
-# 1. Configure database
-cp config.example.php config.php
-# edit config.php with your credentials
-
-# 2. Apply database schemas (in order)
-mysql -u root -p training_tracker < schema.sql
-mysql -u root -p training_tracker < schema_media.sql
-mysql -u root -p training_tracker < schema_builder.sql
-mysql -u root -p training_tracker < schema_v3.sql
-mysql -u root -p training_tracker < schema_v4.sql
-
-# 3. Build the frontend
-cd frontend
-npm install
-npm run build
-cd ..
-
-# 4. Point your web server at the project root and open in browser
-```
-
-### After pulling changes
-
-```bash
-git pull
-
-# If frontend source files changed:
-cd frontend && npm run build && cd ..
-```
+**User popup menu** — Clicking the avatar/name in the sidebar footer opens an inline popup with links to Edit Profile and Sign Out. The popup is pure HTML/CSS/JS (no Angular) so it works on all PHP pages without a build step.

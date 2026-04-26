@@ -36,8 +36,17 @@ final class Auth
 
         $db      = Database::getInstance();
         $userRepo = new UserRepository($db);
-        self::$cache = $userRepo->validateSession($token);
+        self::$cache = $userRepo->findUserByToken($token);
         return self::$cache;
+    }
+
+    /**
+     * Bust the in-request user cache so a re-fetch picks up
+     * any changes made to the current user's row (e.g. profile update).
+     */
+    public static function bustCache(): void
+    {
+        self::$cache = null;
     }
 
     /**
@@ -49,14 +58,12 @@ final class Auth
         $user = self::user();
         if (!$user) {
             $dest = urlencode($_SERVER['REQUEST_URI'] ?? '');
-            // Compute basePath from script location
-        $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/\\');
-        $appBase   = ($scriptDir === '' || $scriptDir === '.') ? '/' : $scriptDir . '/';
-        // If in admin/ subdirectory, go up one level
-        if (str_ends_with(rtrim($appBase, '/'), '/admin')) {
-            $appBase = dirname(rtrim($appBase, '/')) . '/';
-        }
-        header("Location: {$appBase}login.php?next={$dest}");
+            $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/\\');
+            $appBase   = ($scriptDir === '' || $scriptDir === '.') ? '/' : $scriptDir . '/';
+            if (str_ends_with(rtrim($appBase, '/'), '/admin')) {
+                $appBase = dirname(rtrim($appBase, '/')) . '/';
+            }
+            header("Location: {$appBase}login.php?next={$dest}");
             exit;
         }
         return $user;
@@ -99,7 +106,7 @@ final class Auth
             ]
         );
 
-        self::$cache = null; // bust cache
+        self::$cache = null;
     }
 
     /**
