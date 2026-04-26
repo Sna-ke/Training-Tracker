@@ -69,6 +69,12 @@ rsync -a --delete \
   "$SOURCE/admin/" \
   "$TARGET/admin/"
 
+# ── User pages ────────────────────────────────────────────────
+info "Copying admin pages..."
+rsync -a --delete \
+  "$SOURCE/user/" \
+  "$TARGET/user/"
+
 # ── PHP pages (root level) ─────────────────────────────────────
 info "Copying root PHP pages..."
 rsync -a \

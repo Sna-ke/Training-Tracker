@@ -147,7 +147,7 @@ document.addEventListener('keydown', function(e) {
           </div>
         </div>
         <div class="tt-user-popup-divider"></div>
-        <a href="<?= htmlspecialchars($basePath) ?>profile.php" class="tt-user-popup-item" role="menuitem">
+        <a href="<?= htmlspecialchars($basePath) ?>user/edit_profile.php" class="tt-user-popup-item" role="menuitem">
           <span class="tt-user-popup-icon">✏️</span> Edit Profile
         </a>
         <div class="tt-user-popup-divider"></div>

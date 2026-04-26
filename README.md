@@ -32,8 +32,12 @@ Built for self-hosting on a standard PHP/MySQL stack with an Angular frontend.
 - **Plan builder** — week-by-week drag-and-assign interface for building custom training templates
 - **Plan import** — upload a structured JSON file to create a template with exercises, workout types, and media links
 - **Exercise catalog** — searchable, filterable list of all exercises with inline editing and creation
-- **Multi-user** — session-based auth, athlete and admin roles, admin user management panel
-- **User profiles** — each user can set an emoji avatar, display name, email, and bio via `/profile.php`
+- **Multi-user** — session-based auth, athlete/coach/admin roles, admin user management panel
+- **User profiles** — each user can set an emoji avatar, display name, email, and bio via `/user/edit_profile.php`
+- **Privacy & sharing** — users control what others can see: current journeys, recent exercise logs, status messages
+- **Coach relationships** — athletes can invite users with the Coach role; coaches bypass privacy restrictions and see full activity
+- **Public profile view** — any logged-in user can view a summary profile of another user at `/user/view_profile.php?user_id=N`
+- **Consecutive day streak** — tally of unbroken active training days shown on public profiles
 - **Planned value fallback** — when logging, planned values (sets, reps, distance etc.) are saved as the log entry if the user leaves a field blank
 
 ---
@@ -82,7 +86,7 @@ One Angular app (`frontend/`) compiles to `public/dist/`. Each PHP page sets `wi
 │   │   └── ...
 │   ├── Repositories/
 │   │   ├── BaseRepository.php
-│   │   ├── UserRepository.php    findById/findAll/create/updateFullProfile/updatePassword/sessions
+│   │   ├── UserRepository.php    findById/findAll/findCoaches/privacy/coaches/activity/sessions
 │   │   ├── PlanRepository.php
 │   │   ├── ExerciseRepository.php
 │   │   └── ...
@@ -124,13 +128,19 @@ One Angular app (`frontend/`) compiles to `public/dist/`. Each PHP page sets `wi
 │   ├── header.php                Sidebar shell, nav, user popup menu, loads styles
 │   └── footer.php                Closes shell, loads zone.js + main.js (Angular pages only)
 │
+├── user/
+│   ├── edit_profile.php          Edit own profile: avatar, name, email, bio, password,
+│   │                             sharing preferences, coach invitations
+│   └── view_profile.php          Public profile view (?user_id=N): avatar, name, bio,
+│                                 streak, recent journeys & exercise logs (per privacy)
+│
 ├── index.php                     Journey tracker (APP_PAGE=tracker)
 ├── journeys.php                  Journey list (APP_PAGE=journeys)
 ├── builder.php                   Plan builder (APP_PAGE=builder)
 ├── exercises.php                 Exercise catalog (APP_PAGE=exercises)
 ├── plans.php                     Template manager (pure PHP, no Angular)
 ├── plan_editor.php               Template day editor
-├── profile.php                   User profile editor (avatar, name, email, bio, password)
+├── profile.php                   301 redirect → user/edit_profile.php (backward compat)
 ├── save.php                      Main AJAX API (GET + POST actions)
 ├── builder_api.php               Builder-specific AJAX API
 ├── admin/users.php               Admin panel (APP_PAGE=admin)
@@ -142,7 +152,8 @@ One Angular app (`frontend/`) compiles to `public/dist/`. Each PHP page sets `wi
 ├── schema_builder.sql            Builder-specific alterations
 ├── schema_v3.sql                 exercise.description column
 ├── schema_v4.sql                 users, user_sessions, multi-user columns
-└── schema_v5.sql                 users.avatar + users.bio columns
+├── schema_v5.sql                 users.avatar + users.bio columns
+└── schema_v6.sql                 user_privacy_settings, user_coaches; coach role
 ```
 
 ---
@@ -150,7 +161,7 @@ One Angular app (`frontend/`) compiles to `public/dist/`. Each PHP page sets `wi
 ## Database Schema
 
 All schema files must be applied in order:
-`schema.sql` → `schema_media.sql` → `schema_builder.sql` → `schema_v3.sql` → `schema_v4.sql` → `schema_v5.sql`
+`schema.sql` → `schema_media.sql` → `schema_builder.sql` → `schema_v3.sql` → `schema_v4.sql` → `schema_v5.sql` → `schema_v6.sql`
 
 ### Core tables
 
@@ -166,8 +177,10 @@ All schema files must be applied in order:
 | `training_plans` | A user's active journey instantiated from a template |
 | `plan_days` | Concrete dated days within a journey |
 | `exercise_logs` | Logged exercise results per plan day |
-| `users` | Accounts — name, email, password_hash, avatar, bio, role |
+| `users` | Accounts — name, email, password_hash, avatar, bio, role (`admin`/`athlete`/`user`/`coach`) |
 | `user_sessions` | DB-stored auth tokens with expiry |
+| `user_privacy_settings` | Per-user sharing flags: share_journeys, share_exercise_logs, share_status |
+| `user_coaches` | Coach–athlete relationships with status (`pending`/`accepted`/`declined`) |
 
 ---
 
@@ -183,6 +196,7 @@ All schema files must be applied in order:
    mysql -u root -p training_plan < schema_v3.sql
    mysql -u root -p training_plan < schema_v4.sql
    mysql -u root -p training_plan < schema_v5.sql
+   mysql -u root -p training_plan < schema_v6.sql
    ```
 4. Copy `config.example.php` → `config.php` and fill in DB credentials
 5. Run `php seed_admin.php` to create the first admin account
@@ -213,7 +227,9 @@ Output goes to `public/dist/`.
 | `/builder.php?plan_id=N` | `builder.php` | `app-builder` | Week-by-week plan editor |
 | `/exercises.php` | `exercises.php` | `app-exercises` | Exercise catalog |
 | `/plans.php` | `plans.php` | *(pure PHP)* | Template manager + JSON import |
-| `/profile.php` | `profile.php` | *(pure PHP)* | Edit own profile (avatar, name, email, bio, password) |
+| `/user/edit_profile.php` | `user/edit_profile.php` | *(pure PHP)* | Edit own profile, sharing prefs, coaches |
+| `/user/view_profile.php?user_id=N` | `user/view_profile.php` | *(pure PHP)* | Public profile view of another user |
+| `/profile.php` | `profile.php` | *(redirect)* | 301 → `/user/edit_profile.php` |
 | `/admin/users.php` | `admin/users.php` | `app-admin` | User management (admin only) |
 | `/login.php` | `login.php` | *(pure PHP)* | Login form |
 | `/register.php` | `register.php` | *(pure PHP)* | Registration form |
@@ -258,7 +274,7 @@ Output goes to `public/dist/`.
 | Action | Description |
 |---|---|
 | `add_user` | Create a new user account |
-| `set_role` | Change a user's role |
+| `set_role` | Change a user's role (admin/athlete/user/coach) |
 | `reset_password` | Set a new password for a user |
 | `set_active` | Activate or deactivate a user account |
 
@@ -284,3 +300,7 @@ Design tokens live in `:root` in `frontend/src/styles.css` and are used across a
 **Planned value fallback** — When a user logs a workout without filling in a field, the planned value is used as the logged value. This ensures a completion always records something meaningful.
 
 **User popup menu** — Clicking the avatar/name in the sidebar footer opens an inline popup with links to Edit Profile and Sign Out. The popup is pure HTML/CSS/JS (no Angular) so it works on all PHP pages without a build step.
+
+**Privacy-gated profiles** — The public profile page (`view_profile.php`) only shows activity the user has explicitly enabled sharing for. Coaches bypass these restrictions once their invite is accepted.
+
+**Coach role** — A dedicated `coach` role (separate from `admin`/`athlete`/`user`) controls who appears in the coach-invite picker. Admins assign this role via the existing admin panel.
